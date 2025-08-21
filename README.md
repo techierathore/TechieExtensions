@@ -1,5 +1,13 @@
 # TechieExtensions Suite
 
+<!-- LATEST_RELEASE -->
+📥 **[Download Latest Release](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest)**
+<!-- /LATEST_RELEASE -->
+
+[![Build and Release](https://github.com/YOUR_USERNAME/TechieExtensions/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/YOUR_USERNAME/TechieExtensions/actions/workflows/build-and-release.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Extensions](https://img.shields.io/badge/extensions-2-green.svg)](#-extensions-in-this-suite)
+
 A collection of powerful browser extensions built with Blazor WebAssembly for developers and content creators.
 
 ## 📦 Extensions in this Suite
@@ -16,7 +24,9 @@ A comprehensive Markdown viewer and editor that automatically enhances `.md` fil
 - 🎨 Support for tables, task lists, code blocks, and emojis
 - 📂 Automatic detection of `.md` and `.markdown` files
 
-**Installation Package:** `TrMdManager\dist\TechieMarkDownManager-Chrome-Edge.zip`
+**Download:** 
+- [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieMarkDownManager-Chrome-Edge.zip)
+- [Firefox Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieMarkDownManager-Firefox.zip)
 
 ---
 
@@ -34,17 +44,20 @@ A feature-rich JSON tool for viewing, editing, beautifying, and validating JSON 
 - 📊 JSON statistics (objects, arrays, keys, depth)
 - 📂 Automatic detection of `.json` files
 
-**Installation Package:** `TrJsonManager\dist\TechieJsonManager-Chrome-Edge.zip`
+**Download:**
+- [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieJsonManager-Chrome-Edge.zip)
+- [Firefox Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieJsonManager-Firefox.zip)
 
 ---
 
 ## 🚀 Quick Installation
 
-### For All Extensions:
+### Automatic Download (Recommended):
 
-1. **Download the Package**
-   - Navigate to the respective `dist` folder
-   - Get the `.zip` file for your browser
+1. **Download from GitHub Releases**
+   - Go to [Latest Release](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest)
+   - Download the ZIP file for your extension and browser
+   - All packages are automatically built and tested
 
 2. **Install in Browser**
    
@@ -90,6 +103,40 @@ A feature-rich JSON tool for viewing, editing, beautifying, and validating JSON 
    powershell -ExecutionPolicy Bypass -File package-extension.ps1
    ```
 
+## 🔄 CI/CD Pipeline
+
+This repository includes automated GitHub Actions workflows:
+
+### Automatic Building
+- **Trigger**: Every push to main/master branch
+- **Process**: 
+  - Builds both extensions in Release mode
+  - Creates distribution packages
+  - Runs tests and validation
+
+### Automatic Releases
+- **Trigger**: Git tags or manual workflow dispatch
+- **Output**: 
+  - Creates GitHub release with all extension packages
+  - Updates README with latest download links
+  - Generates release notes
+
+### Manual Release Creation
+```bash
+# Create and push a new version tag
+git tag v1.0.0
+git push origin v1.0.0
+
+# Or trigger manual release via GitHub Actions
+# Go to Actions tab → Build and Release → Run workflow
+```
+
+### Release Files Generated:
+- `TechieMarkDownManager-Chrome-Edge.zip`
+- `TechieMarkDownManager-Firefox.zip`
+- `TechieJsonManager-Chrome-Edge.zip`
+- `TechieJsonManager-Firefox.zip`
+
 ## 📁 Project Structure
 
 ```
@@ -132,6 +179,25 @@ TechieExtensions/
 - **Open Source**: Fully auditable code
 - **No Ads**: Clean, distraction-free interface
 
+## 🏪 Store Deployment
+
+Ready to publish to browser stores? See our comprehensive guide:
+
+📖 **[Store Deployment Guide](STORE_DEPLOYMENT_GUIDE.md)**
+
+### Quick Store Links:
+- **Chrome Web Store**: [Submit Extension](https://chrome.google.com/webstore/devconsole)
+- **Edge Add-ons**: [Partner Center](https://partner.microsoft.com/dashboard/microsoftedge/overview)
+- **Firefox Add-ons**: [Developer Hub](https://addons.mozilla.org/developers/)
+
+### Store Publishing Checklist:
+- [ ] Extensions built and tested
+- [ ] Screenshots prepared (1280x800)
+- [ ] Store descriptions written
+- [ ] Privacy policy created
+- [ ] Developer accounts set up
+- [ ] Packages uploaded and submitted
+
 ## 🤝 Contributing
 
 We welcome contributions! Please feel free to:
@@ -139,6 +205,7 @@ We welcome contributions! Please feel free to:
 - Suggest new features
 - Submit pull requests
 - Improve documentation
+- Test extensions on different browsers
 
 ## 📝 License
 

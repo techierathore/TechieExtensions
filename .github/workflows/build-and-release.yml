@@ -1,0 +1,191 @@
+name: Build and Release Extensions
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (major, minor, patch)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        extension: [TrMdManager, TrJsonManager]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ matrix.extension }}/${{ matrix.extension }}.csproj
+    
+    - name: Build
+      run: dotnet build ${{ matrix.extension }}/${{ matrix.extension }}.csproj --configuration Release --no-restore
+    
+    - name: Publish
+      run: dotnet publish ${{ matrix.extension }}/${{ matrix.extension }}.csproj -c Release -o ${{ matrix.extension }}/publish
+    
+    - name: Create extension package
+      shell: pwsh
+      run: |
+        $extensionName = "${{ matrix.extension }}"
+        $outputPath = "$extensionName/dist"
+        
+        # Create dist directory
+        New-Item -ItemType Directory -Path $outputPath -Force
+        
+        # Get the proper display name
+        if ($extensionName -eq "TrMdManager") {
+          $displayName = "TechieMarkDownManager"
+        } else {
+          $displayName = "TechieJsonManager"
+        }
+        
+        # Create Chrome/Edge package
+        $sourcePath = "$extensionName/bin/Release/net9.0/browserextension"
+        if (Test-Path $sourcePath) {
+          Compress-Archive -Path "$sourcePath/*" -DestinationPath "$outputPath/$displayName-Chrome-Edge.zip" -Force
+        } else {
+          # Try publish path
+          $sourcePath = "$extensionName/publish/browserextension"
+          if (Test-Path $sourcePath) {
+            Compress-Archive -Path "$sourcePath/*" -DestinationPath "$outputPath/$displayName-Chrome-Edge.zip" -Force
+          }
+        }
+        
+        # Create Firefox package (same for now)
+        Copy-Item "$outputPath/$displayName-Chrome-Edge.zip" "$outputPath/$displayName-Firefox.zip"
+        
+        Write-Host "Packages created in $outputPath"
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.extension }}-packages
+        path: ${{ matrix.extension }}/dist/*.zip
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (contains(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts
+    
+    - name: Get version
+      id: version
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION="v$(date +'%Y.%m.%d')-${GITHUB_SHA::7}"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+    
+    - name: Create Release Body
+      id: release_body
+      run: |
+        cat << EOF > release_notes.md
+        # TechieExtensions Release ${{ steps.version.outputs.version }}
+        
+        ## 📦 Download Extensions
+        
+        ### Techie Mark Down Manager
+        - **Chrome/Edge**: TechieMarkDownManager-Chrome-Edge.zip
+        - **Firefox**: TechieMarkDownManager-Firefox.zip
+        
+        ### Techie JSON Manager  
+        - **Chrome/Edge**: TechieJsonManager-Chrome-Edge.zip
+        - **Firefox**: TechieJsonManager-Firefox.zip
+        
+        ## 🚀 Installation
+        
+        ### Chrome/Edge:
+        1. Download the \`-Chrome-Edge.zip\` file for your desired extension
+        2. Open \`chrome://extensions/\` or \`edge://extensions/\`
+        3. Enable "Developer mode"
+        4. Drag and drop the ZIP file onto the page
+        
+        ### Firefox:
+        1. Download the \`-Firefox.zip\` file
+        2. Open \`about:debugging\`
+        3. Click "This Firefox"
+        4. Click "Load Temporary Add-on"
+        5. Select the ZIP file
+        
+        ## 📝 What's New
+        - Automated build from commit: ${{ github.sha }}
+        - Build date: $(date +'%Y-%m-%d %H:%M:%S UTC')
+        
+        ## 🔗 Links
+        - [Documentation](https://github.com/${{ github.repository }}/blob/main/README.md)
+        - [Report Issues](https://github.com/${{ github.repository }}/issues)
+        EOF
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: TechieExtensions ${{ steps.version.outputs.version }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        files: |
+          ./artifacts/**/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-readme:
+    needs: create-release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Update README with latest release link
+      run: |
+        LATEST_RELEASE_URL="https://github.com/${{ github.repository }}/releases/latest"
+        
+        # Update main README
+        sed -i "s|<!-- LATEST_RELEASE -->.*<!-- /LATEST_RELEASE -->|<!-- LATEST_RELEASE -->\n📥 **[Download Latest Release]($LATEST_RELEASE_URL)**\n<!-- /LATEST_RELEASE -->|g" README.md || true
+        
+        # Add download section if it doesn't exist
+        if ! grep -q "LATEST_RELEASE" README.md; then
+          sed -i "1s/^/<!-- LATEST_RELEASE -->\n📥 **[Download Latest Release]($LATEST_RELEASE_URL)**\n<!-- \/LATEST_RELEASE -->\n\n/" README.md
+        fi
+    
+    - name: Commit and push if changed
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@github.com'
+        git add README.md
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update README with latest release link [skip ci]" && git push)
