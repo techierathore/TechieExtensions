@@ -1,0 +1,123 @@
+﻿@page "/index.html"
+@using TrMdManager.Components
+@inherits IndexPage
+
+<div class="main-container">
+    <h3>Techie Mark Down Manager - Markdown Viewer & Editor</h3>
+    <MarkdownEditor @ref="markdownEditor" InitialContent="@InitialMarkdown" />
+</div>
+
+@code {
+    private string InitialMarkdown = @"# Welcome to Techie Mark Down Manager
+
+This is a **Markdown** viewer and editor browser extension built with Blazor WebAssembly.
+
+## Features
+
+- Live preview of Markdown content
+- Split view for editing and preview
+- Synchronized scrolling in split view
+- Support for tables, task lists, and more
+- Copy to clipboard functionality
+
+## Example Content
+
+Here's a sample task list:
+- [x] Create Blazor extension
+- [x] Add Markdown support
+- [x] Add synchronized scrolling
+- [ ] Test the extension
+
+### Tables
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Editor | ✅ | Full-featured markdown editor |
+| Preview | ✅ | Real-time preview rendering |
+| Split View | ✅ | Side-by-side editing |
+| Sync Scroll | ✅ | Synchronized scrolling |
+
+### Code Blocks
+
+```csharp
+public class MarkdownService : IMarkdownService
+{
+    public string ConvertToHtml(string markdown)
+    {
+        return Markdown.ToHtml(markdown);
+    }
+}
+```
+
+### Lists
+
+1. First item
+2. Second item
+   - Nested item
+   - Another nested item
+3. Third item
+
+### Blockquotes
+
+> This is a blockquote
+> It can span multiple lines
+> > And can be nested
+
+### Long Content for Testing Scroll
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+### More Content
+
+Add more content here to test scrolling functionality...
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+
+### End of Document
+
+Enjoy writing in Markdown with synchronized scrolling!";
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    private MarkdownEditor? markdownEditor;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Check if we have content from the background worker
+                var hasContent = await JSRuntime.InvokeAsync<bool>("ExtensionHelper.hasContent");
+                if (hasContent)
+                {
+                    // Get content from background worker
+                    var content = await JSRuntime.InvokeAsync<string?>("ExtensionHelper.getMarkdownContent");
+                    
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        InitialMarkdown = content;
+                        if (markdownEditor != null)
+                        {
+                            markdownEditor.SetContent(content);
+                        }
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading content: {ex.Message}");
+            }
+        }
+    }
+}

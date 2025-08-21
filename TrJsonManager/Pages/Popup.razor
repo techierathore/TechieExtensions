@@ -1,0 +1,21 @@
+﻿@page "/popup.html"
+@using TrJsonManager.Components
+@inherits BasePage
+
+<div class="popup-container">
+    <JsonEditor InitialContent="@QuickJson" />
+</div>
+
+@code {
+    private string QuickJson = @"{
+  ""example"": ""Quick JSON Editor"",
+  ""data"": [1, 2, 3]
+}";
+}
+
+<style>
+    .popup-container {
+        width: 600px;
+        height: 500px;
+    }
+</style>

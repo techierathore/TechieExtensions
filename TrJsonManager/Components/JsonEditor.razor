@@ -1,0 +1,308 @@
+@using TrJsonManager.Services
+@inject IJsonService JsonService
+@inject IJSRuntime JSRuntime
+
+<div class="json-editor-container">
+    <div class="editor-header">
+        <div class="editor-title">
+            <h3>Techie JSON Manager</h3>
+        </div>
+        <div class="editor-stats" style="@(ValidationResult != null && ValidationResult.IsValid ? "" : "display: none;")">
+            @if (ValidationResult?.Statistics != null)
+            {
+                <span class="stat-item">Objects: @ValidationResult.Statistics.ObjectCount</span>
+                <span class="stat-item">Arrays: @ValidationResult.Statistics.ArrayCount</span>
+                <span class="stat-item">Keys: @ValidationResult.Statistics.TotalKeys</span>
+                <span class="stat-item">Depth: @ValidationResult.Statistics.Depth</span>
+            }
+        </div>
+    </div>
+    
+    <div class="editor-toolbar">
+        <div class="toolbar-group">
+            <button class="btn btn-primary" @onclick="BeautifyJson" title="Format JSON">
+                <span class="icon">✨</span> Beautify
+            </button>
+            <button class="btn btn-secondary" @onclick="MinifyJson" title="Minify JSON">
+                <span class="icon">📦</span> Minify
+            </button>
+            <button class="btn btn-success" @onclick="ValidateJson" title="Validate JSON">
+                <span class="icon">✓</span> Validate
+            </button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button class="btn btn-info @(CurrentView == ViewMode.Code ? "active" : "")" 
+                    @onclick="() => ChangeView(ViewMode.Code)" title="Code View">
+                <span class="icon">📝</span> Code
+            </button>
+            <button class="btn btn-info @(CurrentView == ViewMode.Tree ? "active" : "")" 
+                    @onclick="() => ChangeView(ViewMode.Tree)" title="Tree View">
+                <span class="icon">🌳</span> Tree
+            </button>
+            <button class="btn btn-info @(CurrentView == ViewMode.Form ? "active" : "")" 
+                    @onclick="() => ChangeView(ViewMode.Form)" title="Form View">
+                <span class="icon">📋</span> Form
+            </button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button class="btn btn-warning" @onclick="ClearJson" title="Clear">
+                <span class="icon">🗑️</span> Clear
+            </button>
+            <button class="btn btn-default" @onclick="CopyToClipboard" title="Copy to Clipboard">
+                <span class="icon">📋</span> Copy
+            </button>
+            <button class="btn btn-default" @onclick="DownloadJson" title="Download JSON">
+                <span class="icon">💾</span> Download
+            </button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button class="btn btn-secondary" @onclick="LoadSample" title="Load Sample JSON">
+                <span class="icon">📄</span> Sample
+            </button>
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @ErrorMessage
+            @if (ValidationResult?.ErrorLine != null)
+            {
+                <span> (Line: @ValidationResult.ErrorLine, Position: @ValidationResult.ErrorPosition)</span>
+            }
+        </div>
+    }
+    
+    @if (ValidationResult != null && ValidationResult.IsValid)
+    {
+        <div class="alert alert-success">
+            <strong>✓ Valid JSON</strong>
+        </div>
+    }
+    
+    <div class="editor-content">
+        @switch (CurrentView)
+        {
+            case ViewMode.Code:
+                <div class="code-editor-wrapper">
+                    <div class="line-numbers">
+                        @for (int i = 1; i <= LineCount; i++)
+                        {
+                            <div class="line-number">@i</div>
+                        }
+                    </div>
+                    <textarea @ref="textareaElement" 
+                              @bind="JsonContent" 
+                              @bind:event="oninput"
+                              @onkeydown="HandleKeyDown"
+                              class="json-textarea @(ValidationResult != null && !ValidationResult.IsValid ? "invalid" : "")"
+                              placeholder="Paste or type your JSON here..."
+                              spellcheck="false"></textarea>
+                </div>
+                break;
+                
+            case ViewMode.Tree:
+                <div class="tree-view">
+                    @if (TreeRoot != null)
+                    {
+                        <JsonTreeView Node="TreeRoot" OnNodeClick="HandleTreeNodeClick" />
+                    }
+                    else
+                    {
+                        <div class="empty-state">No valid JSON to display in tree view</div>
+                    }
+                </div>
+                break;
+                
+            case ViewMode.Form:
+                <div class="form-view">
+                    @if (TreeRoot != null)
+                    {
+                        <JsonFormView Node="TreeRoot" OnValueChange="@((args) => HandleFormValueChange(args.Path, args.Value))" />
+                    }
+                    else
+                    {
+                        <div class="empty-state">No valid JSON to display in form view</div>
+                    }
+                </div>
+                break;
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? InitialContent { get; set; }
+    
+    private string _jsonContent = string.Empty;
+    private JsonValidationResult? ValidationResult;
+    private string ErrorMessage = string.Empty;
+    private ViewMode CurrentView = ViewMode.Code;
+    private JsonTreeNode? TreeRoot;
+    private ElementReference textareaElement;
+    private int LineCount = 1;
+    
+    public string JsonContent
+    {
+        get => _jsonContent;
+        set
+        {
+            if (_jsonContent != value)
+            {
+                _jsonContent = value;
+                LineCount = Math.Max(1, (_jsonContent?.Split('\n').Length) ?? 1);
+                ValidateJsonQuietly();
+                StateHasChanged();
+            }
+        }
+    }
+    
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(InitialContent))
+        {
+            JsonContent = InitialContent;
+        }
+        else
+        {
+            LoadSample();
+        }
+    }
+    
+    private void ValidateJsonQuietly()
+    {
+        if (string.IsNullOrWhiteSpace(_jsonContent))
+        {
+            ValidationResult = null;
+            TreeRoot = null;
+            return;
+        }
+        
+        ValidationResult = JsonService.ValidateJson(_jsonContent);
+        if (ValidationResult.IsValid)
+        {
+            ErrorMessage = string.Empty;
+            TreeRoot = JsonService.BuildTreeView(_jsonContent);
+        }
+        else
+        {
+            ErrorMessage = ValidationResult.ErrorMessage ?? "Invalid JSON";
+            TreeRoot = null;
+        }
+    }
+    
+    private void ValidateJson()
+    {
+        ValidateJsonQuietly();
+        StateHasChanged();
+    }
+    
+    private void BeautifyJson()
+    {
+        if (!string.IsNullOrWhiteSpace(_jsonContent))
+        {
+            JsonContent = JsonService.FormatJson(_jsonContent);
+        }
+    }
+    
+    private void MinifyJson()
+    {
+        if (!string.IsNullOrWhiteSpace(_jsonContent))
+        {
+            JsonContent = JsonService.MinifyJson(_jsonContent);
+        }
+    }
+    
+    private void ClearJson()
+    {
+        JsonContent = string.Empty;
+        ValidationResult = null;
+        ErrorMessage = string.Empty;
+        TreeRoot = null;
+    }
+    
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _jsonContent);
+    }
+    
+    private async Task DownloadJson()
+    {
+        await JSRuntime.InvokeVoidAsync("downloadJson", _jsonContent, "data.json");
+    }
+    
+    private void LoadSample()
+    {
+        JsonContent = @"{
+  ""name"": ""Techie JSON Manager"",
+  ""version"": ""1.0.0"",
+  ""description"": ""JSON Viewer & Editor Extension"",
+  ""features"": [
+    ""Beautify"",
+    ""Minify"",
+    ""Validate"",
+    ""Tree View""
+  ],
+  ""author"": {
+    ""name"": ""Developer"",
+    ""email"": ""dev@example.com""
+  },
+  ""settings"": {
+    ""theme"": ""dark"",
+    ""autoFormat"": true,
+    ""tabSize"": 2
+  },
+  ""tags"": [""json"", ""editor"", ""browser"", ""extension""]
+}";
+    }
+    
+    private void ChangeView(ViewMode mode)
+    {
+        CurrentView = mode;
+        if (mode != ViewMode.Code)
+        {
+            ValidateJsonQuietly();
+        }
+    }
+    
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Tab")
+        {
+            // Handle tab key for indentation
+            await JSRuntime.InvokeVoidAsync("insertTextAtCursor", textareaElement, "  ");
+        }
+    }
+    
+    private void HandleTreeNodeClick(JsonTreeNode node)
+    {
+        node.IsExpanded = !node.IsExpanded;
+        StateHasChanged();
+    }
+    
+    private void HandleFormValueChange(string path, string newValue)
+    {
+        // Update JSON based on form changes
+        // This would need more complex implementation
+        StateHasChanged();
+    }
+    
+    public void SetContent(string content)
+    {
+        JsonContent = content;
+    }
+    
+    public string GetContent()
+    {
+        return _jsonContent;
+    }
+    
+    private enum ViewMode
+    {
+        Code,
+        Tree,
+        Form
+    }
+}

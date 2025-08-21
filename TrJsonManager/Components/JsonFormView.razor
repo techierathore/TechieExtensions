@@ -1,0 +1,52 @@
+@using TrJsonManager.Services
+
+<div class="form-node">
+    @if (Node != null)
+    {
+        @if (Node.Children != null)
+        {
+            <div class="form-group">
+                <label class="form-label">@Node.Name</label>
+                <div class="form-children">
+                    @foreach (var child in Node.Children)
+                    {
+                        <JsonFormView Node="child" OnValueChange="OnValueChange" />
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="form-field">
+                <label class="field-label">@Node.Name</label>
+                <input type="text" 
+                       class="field-input @GetInputClass(Node.Type)" 
+                       value="@Node.Value"
+                       @onchange="(e) => HandleValueChange(Node.Path, e.Value?.ToString() ?? string.Empty)" />
+                <span class="field-type">@Node.Type</span>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public JsonTreeNode? Node { get; set; }
+    [Parameter] public EventCallback<(string Path, string Value)> OnValueChange { get; set; }
+    
+    private async Task HandleValueChange(string path, string newValue)
+    {
+        await OnValueChange.InvokeAsync((path, newValue));
+    }
+    
+    private string GetInputClass(string type)
+    {
+        return type switch
+        {
+            "String" => "input-string",
+            "Integer" or "Float" => "input-number",
+            "Boolean" => "input-boolean",
+            "Null" => "input-null",
+            _ => ""
+        };
+    }
+}

@@ -1,0 +1,161 @@
+@using TrMdManager.Services
+@inject IMarkdownService MarkdownService
+@inject IJSRuntime JSRuntime
+
+<div class="markdown-editor-container">
+    <div class="editor-toolbar">
+        <button class="btn btn-sm" @onclick="ToggleView" title="Toggle View">
+            @if (_isEditMode)
+            {
+                <span>Preview</span>
+            }
+            else
+            {
+                <span>Edit</span>
+            }
+        </button>
+        <button class="btn btn-sm" @onclick="ToggleSplitView" title="Split View">
+            @if (_isSplitView)
+            {
+                <span>Single View</span>
+            }
+            else
+            {
+                <span>Split View</span>
+            }
+        </button>
+        @if (_isSplitView)
+        {
+            <button class="btn btn-sm @(_syncScroll ? "btn-active" : "")" @onclick="ToggleSyncScroll" title="Sync Scrolling">
+                Sync Scroll: @(_syncScroll ? "On" : "Off")
+            </button>
+        }
+        <button class="btn btn-sm" @onclick="CopyToClipboard" title="Copy Markdown to Clipboard">
+            Copy to Clipboard
+        </button>
+    </div>
+
+    <div class="editor-content @(_isSplitView ? "split-view" : "")">
+        @if (_isEditMode || _isSplitView)
+        {
+            <div class="editor-pane">
+                <textarea @bind="MarkdownContent" @bind:event="oninput" 
+                          class="markdown-input" 
+                          placeholder="Enter Markdown here..."
+                          @ref="textareaElement"
+                          @onscroll="OnEditorScroll"></textarea>
+            </div>
+        }
+        
+        @if (!_isEditMode || _isSplitView)
+        {
+            <div class="preview-pane" @ref="previewPaneElement" @onscroll="OnPreviewScroll">
+                <div class="markdown-preview">
+                    @((MarkupString)HtmlContent)
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? InitialContent { get; set; }
+
+    private string _markdownContent = string.Empty;
+    private string HtmlContent => MarkdownService.ConvertToHtml(_markdownContent);
+    private bool _isEditMode = true;
+    private bool _isSplitView = false;
+    private bool _syncScroll = true;
+    private ElementReference textareaElement;
+    private ElementReference previewPaneElement;
+    private bool _isScrolling = false;
+
+    public string MarkdownContent
+    {
+        get => _markdownContent;
+        set
+        {
+            if (_markdownContent != value)
+            {
+                _markdownContent = value;
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(InitialContent))
+        {
+            _markdownContent = InitialContent;
+        }
+    }
+
+    private void ToggleView()
+    {
+        _isEditMode = !_isEditMode;
+        _isSplitView = false;
+    }
+
+    private void ToggleSplitView()
+    {
+        _isSplitView = !_isSplitView;
+        if (_isSplitView)
+        {
+            _isEditMode = true;
+        }
+    }
+
+    private void ToggleSyncScroll()
+    {
+        _syncScroll = !_syncScroll;
+    }
+
+    private async Task OnEditorScroll()
+    {
+        if (!_syncScroll || !_isSplitView || _isScrolling) return;
+        
+        _isScrolling = true;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("syncScroll", textareaElement, previewPaneElement, "editor");
+        }
+        finally
+        {
+            await Task.Delay(50);
+            _isScrolling = false;
+        }
+    }
+
+    private async Task OnPreviewScroll()
+    {
+        if (!_syncScroll || !_isSplitView || _isScrolling) return;
+        
+        _isScrolling = true;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("syncScroll", previewPaneElement, textareaElement, "preview");
+        }
+        finally
+        {
+            await Task.Delay(50);
+            _isScrolling = false;
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _markdownContent);
+    }
+
+    public void SetContent(string content)
+    {
+        _markdownContent = content;
+        StateHasChanged();
+    }
+
+    public string GetContent()
+    {
+        return _markdownContent;
+    }
+}

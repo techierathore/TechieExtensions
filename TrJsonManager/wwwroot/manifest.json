@@ -1,0 +1,51 @@
+﻿{
+  "manifest_version": 3,
+  "name": "Techie JSON Manager",
+  "description": "View, edit, beautify, and validate JSON files directly in your browser",
+  "version": "1.0",
+  "background": {
+    "service_worker": "content/BackgroundWorker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Techie JSON Manager"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "clipboardWrite",
+    "clipboardRead"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*/*.json", "file:///*/*.json"],
+      "js": ["content/JsonHandler.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "framework/*",
+        "content/*",
+        "css/*",
+        "js/*"
+      ],
+      "matches": [ "<all_urls>" ]
+    }
+  ],
+  "icons": {
+    "16": "favicon.png",
+    "48": "favicon.png",
+    "128": "favicon.png"
+  }
+}

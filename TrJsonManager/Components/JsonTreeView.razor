@@ -1,0 +1,56 @@
+@using TrJsonManager.Services
+
+<div class="tree-node">
+    @if (Node != null)
+    {
+        <div class="node-content" @onclick="() => OnNodeClick.InvokeAsync(Node)">
+            @if (Node.Children != null && Node.Children.Any())
+            {
+                <span class="node-toggle">@(Node.IsExpanded ? "▼" : "▶")</span>
+            }
+            else
+            {
+                <span class="node-spacer"></span>
+            }
+            
+            <span class="node-key">@Node.Name</span>
+            <span class="node-separator">:</span>
+            
+            @if (Node.Children == null)
+            {
+                <span class="node-value @GetValueClass(Node.Type)">@Node.Value</span>
+            }
+            else
+            {
+                <span class="node-type">@Node.Value</span>
+            }
+        </div>
+        
+        @if (Node.IsExpanded && Node.Children != null)
+        {
+            <div class="node-children">
+                @foreach (var child in Node.Children)
+                {
+                    <JsonTreeView Node="child" OnNodeClick="OnNodeClick" />
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public JsonTreeNode? Node { get; set; }
+    [Parameter] public EventCallback<JsonTreeNode> OnNodeClick { get; set; }
+    
+    private string GetValueClass(string type)
+    {
+        return type switch
+        {
+            "String" => "value-string",
+            "Integer" or "Float" => "value-number",
+            "Boolean" => "value-boolean",
+            "Null" => "value-null",
+            _ => ""
+        };
+    }
+}

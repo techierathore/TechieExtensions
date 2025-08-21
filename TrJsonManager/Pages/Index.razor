@@ -1,0 +1,45 @@
+﻿@page "/index.html"
+@using TrJsonManager.Components
+@inherits IndexPage
+
+<div class="main-container">
+    <JsonEditor @ref="jsonEditor" InitialContent="@InitialJson" />
+</div>
+
+@code {
+    private JsonEditor? jsonEditor;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string InitialJson = string.Empty;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Check if we have content from the background worker
+                var hasContent = await JSRuntime.InvokeAsync<bool>("ExtensionHelper.hasContent");
+                if (hasContent)
+                {
+                    // Get content from background worker
+                    var content = await JSRuntime.InvokeAsync<string?>("ExtensionHelper.getJsonContent");
+                    
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        InitialJson = content;
+                        if (jsonEditor != null)
+                        {
+                            jsonEditor.SetContent(content);
+                        }
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading content: {ex.Message}");
+            }
+        }
+    }
+}

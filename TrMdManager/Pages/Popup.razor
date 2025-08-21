@@ -1,0 +1,32 @@
+﻿@page "/popup.html"
+@using TrMdManager.Components
+@inherits BasePage
+
+<div class="popup-container">
+    <h4>Techie Mark Down Manager</h4>
+    <div class="popup-content">
+        <MarkdownEditor InitialContent="@QuickMarkdown" />
+    </div>
+</div>
+
+@code {
+    private string QuickMarkdown = "# Quick Note\n\nStart typing your Markdown here...";
+}
+
+<style>
+    .popup-container {
+        width: 400px;
+        height: 500px;
+        padding: 10px;
+    }
+    
+    .popup-content {
+        height: calc(100% - 40px);
+    }
+    
+    h4 {
+        margin: 0 0 10px 0;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #ddd;
+    }
+</style>
