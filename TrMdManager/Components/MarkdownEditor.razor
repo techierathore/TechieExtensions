@@ -33,6 +33,10 @@
         <button class="btn btn-sm" @onclick="CopyToClipboard" title="Copy Markdown to Clipboard">
             Copy to Clipboard
         </button>
+        <div style="flex: 1;"></div>
+        <button class="btn btn-sm btn-feedback" @onclick="OpenFeedbackForm" title="Give Feedback">
+            Give Feedback
+        </button>
     </div>
 
     <div class="editor-content @(_isSplitView ? "split-view" : "")">
@@ -157,5 +161,10 @@
     public string GetContent()
     {
         return _markdownContent;
+    }
+    
+    private async Task OpenFeedbackForm()
+    {
+        await JSRuntime.InvokeVoidAsync("window.open", "https://forms.gle/gctmvQ4bYv72PHRA9", "_blank");
     }
 }

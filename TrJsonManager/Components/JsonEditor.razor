@@ -62,6 +62,9 @@
             <button class="btn btn-secondary" @onclick="LoadSample" title="Load Sample JSON">
                 <span class="icon">📄</span> Sample
             </button>
+            <button class="btn btn-feedback" @onclick="OpenFeedbackForm" title="Give Feedback">
+                Give Feedback
+            </button>
         </div>
     </div>
     
@@ -297,6 +300,11 @@
     public string GetContent()
     {
         return _jsonContent;
+    }
+    
+    private async Task OpenFeedbackForm()
+    {
+        await JSRuntime.InvokeVoidAsync("window.open", "https://forms.gle/gctmvQ4bYv72PHRA9", "_blank");
     }
     
     private enum ViewMode

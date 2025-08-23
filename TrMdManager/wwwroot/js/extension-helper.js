@@ -9,10 +9,12 @@ window.ExtensionHelper = {
                         console.error('Error getting content:', chrome.runtime.lastError);
                         resolve(null);
                     } else {
+                        console.log('Received content response:', response);
                         resolve(response?.content || null);
                     }
                 });
             } else {
+                console.log('Chrome runtime not available');
                 resolve(null);
             }
         });

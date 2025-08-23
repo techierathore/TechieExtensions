@@ -98,6 +98,17 @@
     color: #212529;
 }
 
+.btn-feedback {
+    background: #007bff;
+    color: white;
+    font-size: 13px;
+    padding: 6px 10px;
+}
+
+.btn-feedback:hover {
+    background: #0056b3;
+}
+
 .icon {
     font-size: 16px;
 }

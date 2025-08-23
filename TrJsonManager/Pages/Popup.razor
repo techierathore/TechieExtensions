@@ -1,9 +1,15 @@
 ﻿@page "/popup.html"
 @using TrJsonManager.Components
-@inherits BasePage
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
 
 <div class="popup-container">
-    <JsonEditor InitialContent="@QuickJson" />
+    <div class="header-section">
+        <button class="feedback-btn" @onclick="OpenFeedbackForm">Give Feedback</button>
+    </div>
+    <div class="editor-section">
+        <JsonEditor InitialContent="@QuickJson" />
+    </div>
 </div>
 
 @code {
@@ -11,11 +17,45 @@
   ""example"": ""Quick JSON Editor"",
   ""data"": [1, 2, 3]
 }";
+
+    private async Task OpenFeedbackForm()
+    {
+        await JS.InvokeVoidAsync("window.open", "https://forms.gle/gctmvQ4bYv72PHRA9", "_blank");
+    }
 }
 
 <style>
     .popup-container {
         width: 600px;
         height: 500px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .header-section {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .editor-section {
+        flex: 1;
+        overflow: auto;
+    }
+    
+    .feedback-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+    
+    .feedback-btn:hover {
+        background-color: #0056b3;
     }
 </style>

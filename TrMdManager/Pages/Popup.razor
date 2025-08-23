@@ -1,9 +1,13 @@
 ﻿@page "/popup.html"
 @using TrMdManager.Components
-@inherits BasePage
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
 
 <div class="popup-container">
-    <h4>Techie Mark Down Manager</h4>
+    <div class="header-section">
+        <h4>Techie Mark Down Manager</h4>
+        <button class="feedback-btn" @onclick="OpenFeedbackForm">Give Feedback</button>
+    </div>
     <div class="popup-content">
         <MarkdownEditor InitialContent="@QuickMarkdown" />
     </div>
@@ -11,6 +15,11 @@
 
 @code {
     private string QuickMarkdown = "# Quick Note\n\nStart typing your Markdown here...";
+    
+    private async Task OpenFeedbackForm()
+    {
+        await JS.InvokeVoidAsync("window.open", "https://forms.gle/gctmvQ4bYv72PHRA9", "_blank");
+    }
 }
 
 <style>
@@ -18,15 +27,41 @@
         width: 400px;
         height: 500px;
         padding: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
     }
     
     .popup-content {
-        height: calc(100% - 40px);
+        flex: 1;
+        overflow: auto;
     }
     
     h4 {
-        margin: 0 0 10px 0;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #ddd;
+        margin: 0;
+        flex: 1;
+    }
+    
+    .feedback-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background-color 0.3s;
+    }
+    
+    .feedback-btn:hover {
+        background-color: #0056b3;
     }
 </style>
