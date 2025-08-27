@@ -6,7 +6,7 @@
 
 [![Build and Release](https://github.com/YOUR_USERNAME/TechieExtensions/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/YOUR_USERNAME/TechieExtensions/actions/workflows/build-and-release.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Extensions](https://img.shields.io/badge/extensions-2-green.svg)](#-extensions-in-this-suite)
+[![Extensions](https://img.shields.io/badge/extensions-3-green.svg)](#-extensions-in-this-suite)
 
 A collection of powerful browser extensions built with Blazor WebAssembly for developers and content creators.
 
@@ -47,6 +47,35 @@ A feature-rich JSON tool for viewing, editing, beautifying, and validating JSON 
 **Download:**
 - [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieJsonManager-Chrome-Edge.zip)
 - [Firefox Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieJsonManager-Firefox.zip)
+
+---
+
+### 3. 🪟 Techie ReSizer
+**Window Resizer Extension**
+
+A powerful browser window resizing tool for testing responsive designs and managing window dimensions with precision.
+
+**Features:**
+- 📐 8 preset resolutions (Mobile to 4K)
+- 🎯 Custom width and height input
+- 📊 Real-time window size display
+- 🚀 Instant resizing without page reload
+- 💬 Built-in feedback integration
+- 🎨 Beautiful gradient UI with glassmorphism
+
+**Preset Resolutions:**
+- Mobile (375×667) - iPhone SE/6/7/8
+- Mobile Large (414×896) - iPhone 11/12/13 Pro Max
+- Tablet (768×1024) - iPad and tablets
+- Laptop (1366×768) - Most common laptop
+- HD (1280×720) - Standard HD
+- Full HD (1920×1080) - Desktop standard
+- 2K (2560×1440) - High resolution
+- 4K (3840×2160) - Ultra HD
+
+**Download:**
+- [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TrResizer-Extension.zip)
+- [Store Assets](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TrResizer-StoreAssets.zip)
 
 ---
 
@@ -94,8 +123,13 @@ A feature-rich JSON tool for viewing, editing, beautifying, and validating JSON 
 
 3. **Build individual extension**
    ```bash
-   cd TrMdManager  # or TrJsonManager
+   # For Markdown or JSON Manager:
+   cd TechieMarkDownManager  # or TechieJsonManager
    dotnet build
+   
+   # For TrResizer:
+   cd TrResizer
+   .\build-simple.ps1
    ```
 
 4. **Create production package**
@@ -141,35 +175,48 @@ git push origin v1.0.0
 
 ```
 TechieExtensions/
-├── TechieExtensions.sln         # Solution file
-├── TrMdManager/                 # Markdown Manager Extension
+├── TechieExtensions.sln          # Solution file
+├── TechieMarkDownManager/        # Markdown Manager Extension
+│   ├── Components/               # Blazor components
+│   ├── Services/                # Business logic
+│   ├── wwwroot/                # Static assets
+│   └── dist/                    # Distribution packages
+├── TechieJsonManager/            # JSON Manager Extension
 │   ├── Components/              # Blazor components
 │   ├── Services/               # Business logic
 │   ├── wwwroot/               # Static assets
 │   └── dist/                  # Distribution packages
-└── TrJsonManager/              # JSON Manager Extension
-    ├── Components/             # Blazor components
-    ├── Services/              # Business logic
-    ├── wwwroot/              # Static assets
-    └── dist/                 # Distribution packages
+└── TrResizer/                   # Window Resizer Extension
+    ├── Pages/                  # Razor pages
+    ├── wwwroot/               # Static assets & extension files
+    │   ├── popup.html         # Extension popup
+    │   ├── manifest.json      # Extension manifest
+    │   ├── js/                # JavaScript files
+    │   └── css/               # Stylesheets
+    ├── assets/                # Source icons (SVG)
+    ├── store-assets/          # Store submission assets
+    └── dist-simple/           # Distribution package
 ```
 
 ## 🎯 Features Comparison
 
-| Feature | Techie Mark Down Manager | Techie JSON Manager |
-|---------|-------------------------|---------------------|
-| Auto file detection | ✅ (.md, .markdown) | ✅ (.json) |
-| Syntax highlighting | ✅ | ✅ |
-| Live preview | ✅ | ✅ (Tree view) |
-| Beautify/Format | ✅ | ✅ |
-| Validation | N/A | ✅ |
-| Copy to clipboard | ✅ | ✅ |
-| Download file | ❌ | ✅ |
-| Split view | ✅ | ❌ |
-| Tree view | ❌ | ✅ |
-| Form editor | ❌ | ✅ |
-| Sync scroll | ✅ | N/A |
-| Statistics | ❌ | ✅ |
+| Feature | Techie Mark Down Manager | Techie JSON Manager | Techie ReSizer |
+|---------|-------------------------|---------------------|----------------|
+| Auto file detection | ✅ (.md, .markdown) | ✅ (.json) | N/A |
+| Syntax highlighting | ✅ | ✅ | N/A |
+| Live preview | ✅ | ✅ (Tree view) | ✅ (Size display) |
+| Beautify/Format | ✅ | ✅ | N/A |
+| Validation | N/A | ✅ | ✅ (Size limits) |
+| Copy to clipboard | ✅ | ✅ | N/A |
+| Download file | ❌ | ✅ | N/A |
+| Split view | ✅ | ❌ | N/A |
+| Tree view | ❌ | ✅ | N/A |
+| Form editor | ❌ | ✅ | ✅ (Custom input) |
+| Sync scroll | ✅ | N/A | N/A |
+| Statistics | ❌ | ✅ | ✅ (Window size) |
+| Preset options | N/A | ✅ (Samples) | ✅ (8 resolutions) |
+| Real-time updates | ✅ | ✅ | ✅ |
+| Feedback integration | ❌ | ❌ | ✅ |
 
 ## 🛡️ Privacy & Security
 
@@ -239,10 +286,11 @@ For issues, questions, or suggestions:
 
 ## 📊 Stats
 
-- **Total Extensions**: 2
-- **Supported Browsers**: Chrome, Edge, Firefox
-- **Technology**: Blazor WebAssembly, C#, JavaScript
-- **Manifest Version**: v3 (Chrome/Edge)
+- **Total Extensions**: 3
+- **Supported Browsers**: Chrome, Edge, Firefox, Brave, Opera
+- **Technology**: Blazor WebAssembly, C#, JavaScript, HTML/CSS
+- **Manifest Version**: v3 (Chrome/Edge/Brave)
+- **Privacy Focused**: 100% offline, no data collection
 
 ---
 

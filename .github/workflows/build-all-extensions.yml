@@ -1,0 +1,247 @@
+name: Build All Extensions
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-trresizer:
+    name: Build TrResizer Extension
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Build and Package TrResizer
+      run: |
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "Building TrResizer Extension" -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Cyan
+        
+        # Navigate to TrResizer directory
+        Set-Location -Path TrResizer
+        
+        # Ensure icons exist (copy from existing if generation fails)
+        if (-not (Test-Path "wwwroot\icon128.png")) {
+          Write-Host "Icons missing, using fallback icons"
+          # The icons should already be in the repo
+        }
+        
+        # Create dist-simple directory
+        Write-Host "Creating distribution package..." -ForegroundColor Yellow
+        New-Item -ItemType Directory -Force -Path dist-simple | Out-Null
+        
+        # Copy required files
+        Write-Host "Copying extension files..." -ForegroundColor Yellow
+        
+        # Copy HTML, manifest, and JavaScript
+        Copy-Item -Path "wwwroot\popup.html" -Destination "dist-simple\" -Force -ErrorAction SilentlyContinue
+        Copy-Item -Path "wwwroot\manifest.json" -Destination "dist-simple\" -Force -ErrorAction SilentlyContinue
+        
+        # Copy directories
+        if (Test-Path "wwwroot\css") {
+          Copy-Item -Path "wwwroot\css" -Destination "dist-simple\" -Recurse -Force
+        }
+        if (Test-Path "wwwroot\js") {
+          Copy-Item -Path "wwwroot\js" -Destination "dist-simple\" -Recurse -Force
+        }
+        
+        # Copy icons
+        $iconFiles = @("icon16.png", "icon32.png", "icon48.png", "icon128.png", "icon256.png", "icon512.png")
+        foreach ($icon in $iconFiles) {
+          if (Test-Path "wwwroot\$icon") {
+            Copy-Item -Path "wwwroot\$icon" -Destination "dist-simple\" -Force
+          }
+        }
+        
+        Write-Host "Files in dist-simple:" -ForegroundColor Yellow
+        Get-ChildItem -Path "dist-simple" -Recurse | Select-Object FullName
+        
+        # Create release directory
+        Write-Host "Creating release packages..." -ForegroundColor Yellow
+        New-Item -ItemType Directory -Force -Path release | Out-Null
+        
+        # Create ZIP packages
+        if (Test-Path "dist-simple\popup.html") {
+          Write-Host "Creating TrResizer-Extension.zip" -ForegroundColor Green
+          Compress-Archive -Path "dist-simple\*" -DestinationPath "release\TrResizer-Extension.zip" -Force
+        } else {
+          Write-Host "ERROR: dist-simple doesn't contain required files!" -ForegroundColor Red
+        }
+        
+        # Package store assets if they exist
+        if (Test-Path "store-assets") {
+          Write-Host "Creating TrResizer-StoreAssets.zip" -ForegroundColor Green
+          Compress-Archive -Path "store-assets\*" -DestinationPath "release\TrResizer-StoreAssets.zip" -Force
+        }
+        
+        # List release packages
+        Write-Host ""
+        Write-Host "Release packages created:" -ForegroundColor Cyan
+        if (Test-Path "release") {
+          Get-ChildItem -Path "release\*.zip" | ForEach-Object {
+            Write-Host "  - $($_.Name) ($([math]::Round($_.Length / 1KB, 2)) KB)" -ForegroundColor Green
+          }
+        } else {
+          Write-Host "  No release directory found!" -ForegroundColor Red
+        }
+        
+        # Move back to root
+        Set-Location -Path ..
+      shell: pwsh
+    
+    - name: Upload TrResizer Extension
+      uses: actions/upload-artifact@v4
+      with:
+        name: TrResizer-Extension-${{ github.run_number }}
+        path: |
+          TrResizer/release/*.zip
+        if-no-files-found: error
+    
+    - name: Upload TrResizer Distribution
+      uses: actions/upload-artifact@v4
+      with:
+        name: TrResizer-Distribution-${{ github.run_number }}
+        path: TrResizer/dist-simple/
+        if-no-files-found: warn
+
+  build-other-extensions:
+    name: Build Other Extensions
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Build JSON Manager
+      working-directory: ./TechieJsonManager
+      run: |
+        Write-Host "Building Techie JSON Manager..." -ForegroundColor Cyan
+        dotnet build --configuration Release
+        dotnet publish --configuration Release
+      shell: pwsh
+      continue-on-error: true
+    
+    - name: Build Markdown Manager
+      working-directory: ./TechieMarkDownManager
+      run: |
+        Write-Host "Building Techie Markdown Manager..." -ForegroundColor Cyan
+        dotnet build --configuration Release
+        dotnet publish --configuration Release
+      shell: pwsh
+      continue-on-error: true
+    
+    - name: Package Other Extensions
+      run: |
+        Write-Host "Packaging other extensions..." -ForegroundColor Cyan
+        
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path releases | Out-Null
+        
+        # Package JSON Manager if exists
+        if (Test-Path "TechieJsonManager\bin\Release") {
+          Write-Host "Packaging JSON Manager..." -ForegroundColor Yellow
+          Compress-Archive -Path "TechieJsonManager\bin\Release\*" -DestinationPath "releases\TechieJsonManager.zip" -Force
+        }
+        
+        # Package Markdown Manager if exists
+        if (Test-Path "TechieMarkDownManager\bin\Release") {
+          Write-Host "Packaging Markdown Manager..." -ForegroundColor Yellow
+          Compress-Archive -Path "TechieMarkDownManager\bin\Release\*" -DestinationPath "releases\TechieMarkDownManager.zip" -Force
+        }
+        
+        Write-Host "Packages created:" -ForegroundColor Cyan
+        Get-ChildItem -Path "releases\*.zip" -ErrorAction SilentlyContinue | ForEach-Object {
+          Write-Host "  - $($_.Name)" -ForegroundColor Green
+        }
+      shell: pwsh
+      continue-on-error: true
+    
+    - name: Upload Other Extensions
+      uses: actions/upload-artifact@v4
+      with:
+        name: Other-Extensions-${{ github.run_number }}
+        path: releases/*.zip
+        if-no-files-found: warn
+
+  create-combined-release:
+    name: Create Combined Release
+    needs: [build-trresizer, build-other-extensions]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    
+    - name: Display structure
+      run: |
+        echo "Downloaded artifacts structure:"
+        ls -la artifacts/
+        find artifacts -type f -name "*.zip" | head -20
+    
+    - name: Prepare release files
+      run: |
+        mkdir -p release-files
+        find artifacts -name "*.zip" -type f -exec cp {} release-files/ \;
+        echo "Files to release:"
+        ls -la release-files/
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: extensions-v${{ github.run_number }}
+        name: Extensions Release Build ${{ github.run_number }}
+        body: |
+          # TechieExtensions Release
+          
+          ## 🎉 Extensions Included
+          
+          ### TrResizer (Window Resizer)
+          - Resize browser windows to preset or custom dimensions
+          - 8 preset resolutions from Mobile to 4K
+          - Privacy-focused with no data collection
+          
+          ### JSON Manager
+          - View, edit, and beautify JSON files
+          - Tree view and form view
+          - 100% offline operation
+          
+          ### Markdown Manager
+          - Live preview markdown editing
+          - Split view with synchronized scrolling
+          - Full CommonMark and GFM support
+          
+          ## 📦 Installation
+          1. Download the extension ZIP file
+          2. Extract to a folder
+          3. Open browser extension management (chrome://extensions or edge://extensions)
+          4. Enable Developer Mode
+          5. Click "Load unpacked" and select the extracted folder
+          
+          ## 🔒 Privacy
+          All extensions are privacy-focused with no data collection or tracking.
+        draft: false
+        prerelease: false
+        files: release-files/*.zip
+        fail_on_unmatched_files: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
