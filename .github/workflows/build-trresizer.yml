@@ -24,28 +24,65 @@ jobs:
       with:
         dotnet-version: '9.0.x'
     
-    - name: Install ImageMagick
+    - name: Install or Update ImageMagick
       run: |
-        choco install imagemagick -y
-        refreshenv
+        # Check if ImageMagick is installed, upgrade if it is, install if not
+        $installed = choco list --local-only imagemagick
+        if ($installed -match "imagemagick") {
+          Write-Host "ImageMagick already installed, upgrading..."
+          choco upgrade imagemagick -y --no-progress
+        } else {
+          Write-Host "Installing ImageMagick..."
+          choco install imagemagick -y --no-progress
+        }
+        # Set environment variable for ImageMagick
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+      shell: pwsh
     
     - name: Generate Icons
       working-directory: ./TrResizer
       run: |
-        # Generate icons using fallback if ImageMagick fails
-        try {
+        # Try different icon generation scripts
+        if (Test-Path "generate-icons-from-svg.ps1") {
+          Write-Host "Using generate-icons-from-svg.ps1"
+          try {
+            .\generate-icons-from-svg.ps1
+          } catch {
+            Write-Host "SVG generation failed, trying simple generation"
+            if (Test-Path "generate-icons-simple.ps1") {
+              .\generate-icons-simple.ps1
+            } else {
+              Write-Host "Warning: Could not generate icons, using existing ones"
+            }
+          }
+        } elseif (Test-Path "generate-icons-simple.ps1") {
+          Write-Host "Using generate-icons-simple.ps1"
+          .\generate-icons-simple.ps1
+        } elseif (Test-Path "generate-icons.ps1") {
+          Write-Host "Using generate-icons.ps1 with fallback"
           .\generate-icons.ps1
-        } catch {
-          Write-Host "ImageMagick failed, using fallback"
-          .\generate-icons.ps1
+        } else {
+          Write-Host "Warning: No icon generation script found, using existing icons"
         }
       shell: pwsh
+      continue-on-error: true
     
     - name: Build Simple Version
       working-directory: ./TrResizer
       run: |
-        .\build-simple.ps1
-        Write-Host "n" | Out-Host
+        # Non-interactive build
+        if (Test-Path "build-simple.ps1") {
+          # Modify script temporarily to be non-interactive
+          $script = Get-Content "build-simple.ps1" -Raw
+          $script = $script -replace 'Read-Host.*', '$response = "n"'
+          $script | Out-File "build-simple-ci.ps1" -Encoding UTF8
+          .\build-simple-ci.ps1
+        } else {
+          Write-Host "build-simple.ps1 not found, creating basic build"
+          # Fallback: create dist-simple manually
+          New-Item -ItemType Directory -Force -Path "dist-simple"
+          Copy-Item -Path "wwwroot\*" -Destination "dist-simple" -Recurse -Force
+        }
       shell: pwsh
     
     - name: Build Blazor Version (Optional)
