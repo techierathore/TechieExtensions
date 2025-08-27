@@ -98,23 +98,43 @@ jobs:
         # Create release directory
         New-Item -ItemType Directory -Force -Path release
         
+        # Check if dist-simple exists, if not create it
+        if (-not (Test-Path dist-simple)) {
+          Write-Host "dist-simple not found, creating from wwwroot"
+          New-Item -ItemType Directory -Force -Path dist-simple
+          Copy-Item -Path wwwroot\* -Destination dist-simple -Recurse -Force
+        }
+        
         # Package simple version
-        Compress-Archive -Path dist-simple\* -DestinationPath release\TrResizer-Simple.zip -Force
+        if (Test-Path dist-simple) {
+          Write-Host "Creating TrResizer-Simple.zip"
+          Compress-Archive -Path dist-simple\* -DestinationPath release\TrResizer-Simple.zip -Force
+        }
         
         # Package Chrome/Edge version if exists
         if (Test-Path dist\chrome-edge) {
+          Write-Host "Creating TrResizer-ChromeEdge.zip"
           Compress-Archive -Path dist\chrome-edge\* -DestinationPath release\TrResizer-ChromeEdge.zip -Force
+        } elseif (Test-Path dist-simple) {
+          Write-Host "Using dist-simple for ChromeEdge package"
+          Compress-Archive -Path dist-simple\* -DestinationPath release\TrResizer-ChromeEdge.zip -Force
         }
         
         # Package Firefox version if exists
         if (Test-Path dist\firefox) {
+          Write-Host "Creating TrResizer-Firefox.zip"
           Compress-Archive -Path dist\firefox\* -DestinationPath release\TrResizer-Firefox.zip -Force
         }
         
         # Copy store assets
         if (Test-Path store-assets) {
+          Write-Host "Creating TrResizer-StoreAssets.zip"
           Compress-Archive -Path store-assets\* -DestinationPath release\TrResizer-StoreAssets.zip -Force
         }
+        
+        # List created files
+        Write-Host "Release packages created:"
+        Get-ChildItem -Path release
       shell: pwsh
     
     - name: Upload Extension Artifacts
@@ -133,17 +153,56 @@ jobs:
         path: TrResizer/dist-simple/
         retention-days: 7
     
-    # Optional: Create GitHub Release
+    # Optional: Create GitHub Release (only if files exist)
+    - name: Check for Release Files
+      id: check_files
+      working-directory: ./TrResizer
+      run: |
+        if (Test-Path release/*.zip) {
+          $files = Get-ChildItem release/*.zip
+          if ($files.Count -gt 0) {
+            echo "files_exist=true" >> $env:GITHUB_OUTPUT
+            Write-Host "Found $($files.Count) release files"
+          } else {
+            echo "files_exist=false" >> $env:GITHUB_OUTPUT
+            Write-Host "No release files found"
+          }
+        } else {
+          echo "files_exist=false" >> $env:GITHUB_OUTPUT
+          Write-Host "Release directory empty"
+        }
+      shell: pwsh
+    
+    - name: Create Tag
+      if: steps.check_files.outputs.files_exist == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        $tagName = "trresizer-v${{ github.run_number }}"
+        git tag $tagName -m "Auto-release $tagName"
+        git push origin $tagName --force
+      shell: pwsh
+      continue-on-error: true
+    
     - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: steps.check_files.outputs.files_exist == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v2
       with:
         tag_name: trresizer-v${{ github.run_number }}
         name: TrResizer Release ${{ github.run_number }}
+        body: |
+          Automated release of TrResizer extension
+          
+          ## Downloads
+          - **TrResizer-Simple.zip** - Ready to use version
+          - **TrResizer-ChromeEdge.zip** - Chrome/Edge version
+          - **TrResizer-StoreAssets.zip** - Store submission assets
         draft: false
         prerelease: false
         files: |
           TrResizer/release/*.zip
+        fail_on_unmatched_files: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
