@@ -30,7 +30,7 @@ jobs:
     
     strategy:
       matrix:
-        extension: [TrMdManager, TrJsonManager]
+        extension: [TrMdManager, TrJsonManager, TrResizer]
     
     steps:
     - uses: actions/checkout@v4
@@ -41,12 +41,15 @@ jobs:
         dotnet-version: '9.0.x'
     
     - name: Restore dependencies
+      if: matrix.extension != 'TrResizer'
       run: dotnet restore ${{ matrix.extension }}/${{ matrix.extension }}.csproj
     
     - name: Build
+      if: matrix.extension != 'TrResizer'
       run: dotnet build ${{ matrix.extension }}/${{ matrix.extension }}.csproj --configuration Release --no-restore
     
     - name: Publish
+      if: matrix.extension != 'TrResizer'
       run: dotnet publish ${{ matrix.extension }}/${{ matrix.extension }}.csproj -c Release -o ${{ matrix.extension }}/publish
     
     - name: Create extension package
@@ -58,27 +61,45 @@ jobs:
         # Create dist directory
         New-Item -ItemType Directory -Path $outputPath -Force
         
-        # Get the proper display name
-        if ($extensionName -eq "TrMdManager") {
-          $displayName = "TechieMarkDownManager"
-        } else {
-          $displayName = "TechieJsonManager"
-        }
-        
-        # Create Chrome/Edge package
-        $sourcePath = "$extensionName/bin/Release/net9.0/browserextension"
-        if (Test-Path $sourcePath) {
-          Compress-Archive -Path "$sourcePath/*" -DestinationPath "$outputPath/$displayName-Chrome-Edge.zip" -Force
-        } else {
-          # Try publish path
-          $sourcePath = "$extensionName/publish/browserextension"
+        # Handle TrResizer differently (HTML/JS based)
+        if ($extensionName -eq "TrResizer") {
+          $displayName = "TechieReSizer"
+          
+          # For TrResizer, package the wwwroot contents or dist-simple if it exists
+          if (Test-Path "$extensionName/dist-simple") {
+            $sourcePath = "$extensionName/dist-simple"
+          } else {
+            # Build dist-simple from wwwroot
+            $sourcePath = "$extensionName/wwwroot"
+          }
+          
           if (Test-Path $sourcePath) {
             Compress-Archive -Path "$sourcePath/*" -DestinationPath "$outputPath/$displayName-Chrome-Edge.zip" -Force
+            Copy-Item "$outputPath/$displayName-Chrome-Edge.zip" "$outputPath/$displayName-Firefox.zip"
           }
+        } else {
+          # Handle Blazor-based extensions (TrMdManager, TrJsonManager)
+          if ($extensionName -eq "TrMdManager") {
+            $displayName = "TechieMarkDownManager"
+          } else {
+            $displayName = "TechieJsonManager"
+          }
+          
+          # Create Chrome/Edge package
+          $sourcePath = "$extensionName/bin/Release/net9.0/browserextension"
+          if (Test-Path $sourcePath) {
+            Compress-Archive -Path "$sourcePath/*" -DestinationPath "$outputPath/$displayName-Chrome-Edge.zip" -Force
+          } else {
+            # Try publish path
+            $sourcePath = "$extensionName/publish/browserextension"
+            if (Test-Path $sourcePath) {
+              Compress-Archive -Path "$sourcePath/*" -DestinationPath "$outputPath/$displayName-Chrome-Edge.zip" -Force
+            }
+          }
+          
+          # Create Firefox package (same for now)
+          Copy-Item "$outputPath/$displayName-Chrome-Edge.zip" "$outputPath/$displayName-Firefox.zip"
         }
-        
-        # Create Firefox package (same for now)
-        Copy-Item "$outputPath/$displayName-Chrome-Edge.zip" "$outputPath/$displayName-Firefox.zip"
         
         Write-Host "Packages created in $outputPath"
     
@@ -127,6 +148,10 @@ jobs:
         ### Techie JSON Manager  
         - **Chrome/Edge**: TechieJsonManager-Chrome-Edge.zip
         - **Firefox**: TechieJsonManager-Firefox.zip
+        
+        ### Techie ReSizer (Window Resizer)
+        - **Chrome/Edge**: TechieReSizer-Chrome-Edge.zip
+        - **Firefox**: TechieReSizer-Firefox.zip
         
         ## 🚀 Installation
         
