@@ -4,20 +4,29 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>TrMdManager</title>
+    <title>Techie Mark Down Manager - Editor</title>
     <base href="/" />
     <link href="css/app.css" rel="stylesheet" />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/png" href="icon-48.png" />
     <link href="TrMdManager.styles.css" rel="stylesheet" />
 </head>
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <img src="icon-128.png" style="width: 80px; height: 80px; margin-bottom: 20px; animation: pulse 1.5s ease-in-out infinite;">
+            <div style="color: white; font-size: 18px; font-weight: 600; margin-bottom: 10px;">Loading Editor...</div>
+            <svg class="loading-progress" style="width: 60px; height: 60px;">
+                <circle r="40%" cx="50%" cy="50%" />
+                <circle r="40%" cx="50%" cy="50%" />
+            </svg>
+        </div>
+        <style>
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.05); opacity: 0.8; }
+            }
+        </style>
     </div>
 
     <div id="blazor-error-ui">
@@ -25,6 +34,8 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <!-- Markdown parsing now handled by C# backend -->
+    <script src="js/sync-scroll.js"></script>
     <script src="js/extension-helper.js"></script>
     <script src="js/editor-helper.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>

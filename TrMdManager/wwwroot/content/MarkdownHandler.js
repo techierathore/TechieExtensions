@@ -40,36 +40,76 @@
         // Store the original content
         const markdownContent = getMarkdownContent();
         
-        console.log('Sending markdown to parse, first 200 chars:', markdownContent.substring(0, 200));
+        console.log('Markdown file detected, opening in editor with preview mode');
         
-        // Try to parse with service worker first (more reliable)
+        // Send message to background script to handle the navigation
+        chrome.runtime.sendMessage({
+            action: 'openEditorInCurrentTab',
+            content: markdownContent,
+            sourceUrl: window.location.href,
+            startInPreview: true
+        }, function(response) {
+            if (chrome.runtime.lastError) {
+                console.error('Error opening editor:', chrome.runtime.lastError);
+                // Fallback to inline display if navigation fails
+                displayInlinePreview(markdownContent);
+            } else if (response && response.success) {
+                console.log('Editor navigation initiated');
+                // Show loading message while redirecting
+                document.body.innerHTML = `
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    ">
+                        <img src="${chrome.runtime.getURL('icon-128.png')}" style="width: 80px; height: 80px; margin-bottom: 20px;">
+                        <h2 style="color: white;">Loading Markdown Editor...</h2>
+                        <p style="color: rgba(255,255,255,0.8);">Please wait...</p>
+                    </div>
+                `;
+            } else {
+                // Fallback to inline preview
+                displayInlinePreview(markdownContent);
+            }
+        });
+    }
+
+    // Inline preview as fallback when editor cannot open
+    function displayInlinePreview(markdownContent) {
+        // Parse markdown locally for quick preview
         chrome.runtime.sendMessage({
             action: 'parseMarkdown',
             content: markdownContent,
             sourceUrl: window.location.href
         }, function(response) {
             if (response && response.html) {
-                console.log('Received HTML response, first 200 chars:', response.html.substring(0, 200));
-                
-                // Display the rendered markdown
                 displayRenderedMarkdown(markdownContent, response.html);
             } else {
-                console.log('No HTML response, falling back to raw display');
-                // Fallback to raw display
                 displayRawMarkdown(markdownContent);
             }
         });
     }
-
+    
     function displayRenderedMarkdown(rawContent, htmlContent) {
+        // Store original document title if available
+        const originalTitle = document.title || 'Markdown Document';
+        
         // Clear the current page and inject our viewer
         document.documentElement.innerHTML = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Markdown Viewer - Techie Mark Down Manager</title>
+    <title>${originalTitle} - Techie Mark Down Manager</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             margin: 0;
             padding: 0;
@@ -84,6 +124,11 @@
             margin: 0 auto;
             padding: 45px;
         }
+        @media (max-width: 767px) {
+            .markdown-container {
+                padding: 15px;
+            }
+        }
         .toolbar {
             position: fixed;
             top: 10px;
@@ -96,9 +141,18 @@
             z-index: 1000;
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+            max-width: calc(100% - 20px);
+        }
+        @media (max-width: 767px) {
+            .toolbar {
+                right: 5px;
+                top: 5px;
+                max-width: calc(100% - 10px);
+            }
         }
         .toolbar button {
-            padding: 5px 16px;
+            padding: 6px 16px;
             background: #fafbfc;
             color: #24292e;
             border: 1px solid rgba(27,31,35,0.15);
@@ -106,9 +160,15 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
         .toolbar button:hover {
             background: #f3f4f6;
+            border-color: #0969da;
+        }
+        .toolbar button:active {
+            transform: scale(0.98);
         }
         .toolbar button.active {
             background: #0969da;
@@ -214,7 +274,7 @@
 </head>
 <body>
     <div class="toolbar">
-        <button id="toggleView" class="active">Raw</button>
+        <button id="toggleView">Raw</button>
         <button id="openEditor">Open Editor</button>
         <button id="giveFeedback">Give Feedback</button>
     </div>
@@ -238,13 +298,13 @@
                         contentDiv.classList.add('raw-view');
                         contentDiv.textContent = rawContent;
                         toggleButton.textContent = 'Preview';
-                        toggleButton.classList.remove('active');
+                        toggleButton.classList.add('active');
                     } else {
                         contentDiv.classList.remove('raw-view');
                         contentDiv.classList.add('markdown-content');
                         contentDiv.innerHTML = htmlContent;
                         toggleButton.textContent = 'Raw';
-                        toggleButton.classList.add('active');
+                        toggleButton.classList.remove('active');
                     }
                 });
             }

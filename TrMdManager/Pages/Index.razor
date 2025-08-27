@@ -1,12 +1,68 @@
 ﻿@page "/index.html"
 @using TrMdManager.Components
 @using Microsoft.JSInterop
-@inherits IndexPage
+@inject NavigationManager NavigationManager
 
 <div class="main-container">
-    <h3>Techie Mark Down Manager - Markdown Viewer & Editor</h3>
-    <MarkdownEditor @ref="markdownEditor" InitialContent="@InitialMarkdown" />
+    <div class="app-header">
+        <div class="header-content">
+            <img src="icon-48.png" alt="Logo" class="app-logo" />
+            <h3 class="app-title">Techie Mark Down Manager</h3>
+            <span class="app-subtitle">Markdown Viewer & Editor</span>
+        </div>
+    </div>
+    <MarkdownEditor @ref="markdownEditor" InitialContent="@InitialMarkdown" StartInPreview="@_startInPreview" />
 </div>
+
+<style>
+    .main-container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .app-header {
+        background: rgba(255,255,255,0.98);
+        padding: 15px 30px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        border-bottom: 2px solid transparent;
+        background-clip: padding-box;
+    }
+    
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .app-logo {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+    
+    .app-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .app-subtitle {
+        color: #718096;
+        font-size: 0.9rem;
+        margin-left: auto;
+        font-weight: 500;
+        padding: 4px 12px;
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        border-radius: 20px;
+    }
+</style>
+
 
 @code {
     private string InitialMarkdown = @"# Welcome to Techie Mark Down Manager
@@ -90,6 +146,19 @@ Enjoy writing in Markdown with synchronized scrolling!";
 
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     private MarkdownEditor? markdownEditor;
+    private bool _startInPreview = false;
+
+    protected override void OnInitialized()
+    {
+        // Check URL parameters for preview mode synchronously
+        // This ensures the flag is set before the component renders
+        var uri = NavigationManager?.Uri ?? "";
+        if (uri.Contains("preview=true"))
+        {
+            _startInPreview = true;
+            Console.WriteLine("Starting in preview mode from URL parameter");
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -101,17 +170,22 @@ Enjoy writing in Markdown with synchronized scrolling!";
                 var hasContent = await JSRuntime.InvokeAsync<bool>("ExtensionHelper.hasContent");
                 if (hasContent)
                 {
-                    // Get content from background worker
-                    var content = await JSRuntime.InvokeAsync<string?>("ExtensionHelper.getMarkdownContent");
+                    // Get content from extension helper
+                    var markdownContent = await JSRuntime.InvokeAsync<string>("ExtensionHelper.getMarkdownContent");
                     
-                    if (!string.IsNullOrEmpty(content))
+                    if (!string.IsNullOrEmpty(markdownContent))
                     {
-                        InitialMarkdown = content;
+                        Console.WriteLine($"Loaded markdown content: {markdownContent.Substring(0, Math.Min(100, markdownContent.Length))}...");
+                        InitialMarkdown = markdownContent;
                         if (markdownEditor != null)
                         {
-                            markdownEditor.SetContent(content);
+                            markdownEditor.SetContent(markdownContent);
                         }
                         StateHasChanged();
+                    }
+                    else
+                    {
+                        Console.WriteLine("No markdown content found, using default");
                     }
                 }
             }

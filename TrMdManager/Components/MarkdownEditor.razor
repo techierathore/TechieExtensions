@@ -26,8 +26,8 @@
         </button>
         @if (_isSplitView)
         {
-            <button class="btn btn-sm @(_syncScroll ? "btn-active" : "")" @onclick="ToggleSyncScroll" title="Sync Scrolling">
-                Sync Scroll: @(_syncScroll ? "On" : "Off")
+            <button class="btn btn-sm btn-sync-scroll @(_syncScroll ? "btn-active" : "")" @onclick="ToggleSyncScroll" title="Sync Scrolling">
+                <span class="sync-icon">⇄</span> Sync Scroll: @(_syncScroll ? "On" : "Off")
             </button>
         }
         <button class="btn btn-sm" @onclick="CopyToClipboard" title="Copy Markdown to Clipboard">
@@ -64,6 +64,7 @@
 
 @code {
     [Parameter] public string? InitialContent { get; set; }
+    [Parameter] public bool StartInPreview { get; set; } = false;
 
     private string _markdownContent = string.Empty;
     private string HtmlContent => MarkdownService.ConvertToHtml(_markdownContent);
@@ -94,6 +95,17 @@
             _markdownContent = InitialContent;
         }
     }
+    
+    protected override void OnParametersSet()
+    {
+        // If StartInPreview is true, switch to preview mode
+        // This runs after parameters are set
+        if (StartInPreview)
+        {
+            _isEditMode = false;
+            _isSplitView = false;
+        }
+    }
 
     private void ToggleView()
     {
@@ -122,8 +134,9 @@
         _isScrolling = true;
         try
         {
-            await JSRuntime.InvokeVoidAsync("syncScroll", textareaElement, previewPaneElement, "editor");
+            await JSRuntime.InvokeVoidAsync("syncScroll", textareaElement, previewPaneElement);
         }
+        catch { }
         finally
         {
             await Task.Delay(50);
@@ -138,8 +151,9 @@
         _isScrolling = true;
         try
         {
-            await JSRuntime.InvokeVoidAsync("syncScroll", previewPaneElement, textareaElement, "preview");
+            await JSRuntime.InvokeVoidAsync("syncScroll", previewPaneElement, textareaElement);
         }
+        catch { }
         finally
         {
             await Task.Delay(50);

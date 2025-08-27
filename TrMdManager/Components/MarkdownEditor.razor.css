@@ -3,154 +3,232 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .editor-toolbar {
     display: flex !important;
     align-items: center;
-    padding: 8px;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #ddd;
-    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    gap: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .btn {
-    padding: 4px 12px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    padding: 8px 16px;
+    background: white;
+    color: #667eea;
+    border: 2px solid white;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 
 .btn:hover {
-    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    background: #f8f9fa;
+    border-color: #667eea;
 }
 
 .btn-sm {
-    padding: 4px 8px;
-    font-size: 12px;
+    padding: 6px 14px;
+    font-size: 13px;
 }
 
 .btn.btn-active {
-    background-color: #28a745;
-    border-color: #28a745;
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
 }
 
 .btn.btn-active:hover {
-    background-color: #218838;
+    transform: translateY(-2px);
+    background: #5a6fd8;
+    border-color: #5a6fd8;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .btn-feedback {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     color: white;
+    margin-left: auto;
+    border: none;
+    box-shadow: 0 2px 10px rgba(240, 147, 251, 0.3);
+}
+
+.btn-feedback:hover {
+    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.5);
+    transform: translateY(-2px);
+}
+
+.sync-icon {
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 4px;
 }
 
 .editor-content {
     display: flex;
     flex: 1;
     overflow: hidden;
+    background: white;
+    margin: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
 }
 
 .editor-content.split-view {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 0;
+}
+
+.editor-content.split-view .editor-pane {
+    border-right: 1px solid #e2e8f0;
 }
 
 .editor-pane,
 .preview-pane {
     flex: 1;
     overflow: auto;
-    padding: 8px;
+    padding: 20px;
 }
 
 .markdown-input {
     width: 100%;
     height: 100%;
-    border: 1px solid #ddd;
-    padding: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
+    border: none;
+    padding: 20px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 15px;
+    line-height: 1.6;
     resize: none;
     outline: none;
+    background: transparent;
+    color: #2d3748;
 }
 
 .markdown-input:focus {
-    border-color: #007bff;
+    background: rgba(102, 126, 234, 0.02);
 }
 
 .markdown-preview {
-    padding: 8px;
+    padding: 20px;
     background-color: white;
     min-height: 100%;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #2d3748;
 }
 
 .markdown-preview h1 {
-    font-size: 2em;
-    margin: 0.67em 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.3em;
+    font-size: 2.2em;
+    margin: 0.8em 0;
+    border-bottom: 2px solid linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    padding-bottom: 0.4em;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .markdown-preview h2 {
-    font-size: 1.5em;
+    font-size: 1.7em;
     margin: 0.75em 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #e2e8f0;
     padding-bottom: 0.3em;
+    color: #4a5568;
 }
 
 .markdown-preview h3 {
-    font-size: 1.25em;
+    font-size: 1.4em;
     margin: 1em 0;
+    color: #4a5568;
 }
 
 .markdown-preview pre {
-    background-color: #f6f8fa;
-    border-radius: 3px;
+    background: #f6f8fa;
+    border-radius: 6px;
     padding: 16px;
-    overflow: auto;
+    overflow-x: auto;
+    border-left: 3px solid #667eea;
+    margin: 1em 0;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .markdown-preview code {
-    background-color: rgba(27, 31, 35, 0.05);
-    padding: 0.2em 0.4em;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 2px 6px;
     border-radius: 3px;
     font-size: 85%;
+    color: #d73a49;
+    font-family: Consolas, 'Courier New', monospace;
 }
 
 .markdown-preview pre code {
-    background-color: transparent;
+    background: transparent;
     padding: 0;
+    color: #333;
+    font-size: 13px;
+    white-space: pre;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 .markdown-preview blockquote {
-    border-left: 4px solid #dfe2e5;
-    color: #6a737d;
-    padding-left: 1em;
-    margin: 0;
+    border-left: 4px solid #667eea;
+    background: linear-gradient(90deg, #667eea08 0%, transparent 100%);
+    color: #4a5568;
+    padding: 1em 1em 1em 1.5em;
+    margin: 1em 0;
+    border-radius: 4px;
+    font-style: italic;
 }
 
 .markdown-preview table {
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     width: 100%;
-    margin: 1em 0;
+    margin: 1.5em 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .markdown-preview table th,
 .markdown-preview table td {
-    border: 1px solid #dfe2e5;
-    padding: 6px 13px;
+    border: 1px solid #e2e8f0;
+    padding: 12px 16px;
+}
+
+.markdown-preview table th {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    text-align: left;
 }
 
 .markdown-preview table tr:nth-child(2n) {
-    background-color: #f6f8fa;
+    background-color: #f7fafc;
 }
 
 .markdown-preview ul,
 .markdown-preview ol {
     padding-left: 2em;
+    line-height: 1.8;
+}
+
+.markdown-preview li {
+    margin: 0.5em 0;
 }
 
 .markdown-preview ul.contains-task-list {

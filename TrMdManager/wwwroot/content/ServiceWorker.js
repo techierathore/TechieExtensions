@@ -217,19 +217,59 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
     
+    if (request.action === 'openEditorInCurrentTab') {
+        // Store the markdown content temporarily
+        const content = request.content || '';
+        const sourceUrl = request.sourceUrl || '';
+        const startInPreview = request.startInPreview || false;
+        
+        // Store in storage first
+        chrome.storage.local.set({ 
+            pendingContent: content,
+            sourceUrl: sourceUrl,
+            startInPreview: startInPreview
+        }, function() {
+            // Get the current tab and update its URL
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                if (tabs && tabs[0]) {
+                    const params = new URLSearchParams({
+                        hasContent: 'true',
+                        preview: startInPreview ? 'true' : 'false'
+                    });
+                    const editorUrl = chrome.runtime.getURL(`index.html?${params.toString()}`);
+                    
+                    // Update the current tab's URL
+                    chrome.tabs.update(tabs[0].id, {url: editorUrl}, function() {
+                        sendResponse({ success: true });
+                    });
+                } else {
+                    sendResponse({ success: false, error: 'No active tab found' });
+                }
+            });
+        });
+        
+        return true; // Keep the message channel open for async response
+    }
+    
     if (request.action === 'openEditor') {
         // Store the markdown content temporarily
         pendingMarkdownContent = request.content || '';
         pendingSourceUrl = request.sourceUrl || '';
+        const startInPreview = request.startInPreview || false;
         
         // Store in storage first
         chrome.storage.local.set({ 
             pendingContent: pendingMarkdownContent,
-            sourceUrl: pendingSourceUrl
+            sourceUrl: pendingSourceUrl,
+            startInPreview: startInPreview
         }, function() {
-            // Open the editor in a new tab with a parameter
+            // Open the editor in a new tab with parameters
+            const params = new URLSearchParams({
+                hasContent: 'true',
+                preview: startInPreview ? 'true' : 'false'
+            });
             chrome.tabs.create({
-                url: chrome.runtime.getURL('index.html?hasContent=true')
+                url: chrome.runtime.getURL(`index.html?${params.toString()}`)
             }, (tab) => {
                 // Store the tab ID so we can send the content when the editor is ready
                 if (tab && tab.id) {
@@ -246,20 +286,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     if (request.action === 'getMarkdownContent') {
         // Return any pending content
-        chrome.storage.local.get(['pendingContent', 'sourceUrl'], (result) => {
+        chrome.storage.local.get(['pendingContent', 'sourceUrl', 'startInPreview'], (result) => {
             const content = result.pendingContent || pendingMarkdownContent || '';
             const url = result.sourceUrl || pendingSourceUrl || '';
+            const startInPreview = result.startInPreview || false;
             
             console.log('Returning markdown content:', content.substring(0, 100) + '...');
             
             // Clear the pending content after sending
-            chrome.storage.local.remove(['pendingContent', 'sourceUrl']);
+            chrome.storage.local.remove(['pendingContent', 'sourceUrl', 'startInPreview']);
             pendingMarkdownContent = null;
             pendingSourceUrl = null;
             
             sendResponse({ 
                 content: content,
-                sourceUrl: url
+                sourceUrl: url,
+                startInPreview: startInPreview
             });
         });
         return true;
