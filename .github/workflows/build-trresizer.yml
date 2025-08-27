@@ -17,10 +17,10 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
     
@@ -81,7 +81,7 @@ jobs:
       shell: pwsh
     
     - name: Upload Extension Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trresizer-extension
         path: |
@@ -90,7 +90,7 @@ jobs:
         retention-days: 30
     
     - name: Upload Simple Version for Testing
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trresizer-simple
         path: TrResizer/dist-simple/
@@ -99,7 +99,7 @@ jobs:
     # Optional: Create GitHub Release
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: trresizer-v${{ github.run_number }}
         name: TrResizer Release ${{ github.run_number }}
