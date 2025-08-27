@@ -1,0 +1,112 @@
+name: Build TrResizer Extension
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'TrResizer/**'
+      - '.github/workflows/build-trresizer.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'TrResizer/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Install ImageMagick
+      run: |
+        choco install imagemagick -y
+        refreshenv
+    
+    - name: Generate Icons
+      working-directory: ./TrResizer
+      run: |
+        # Generate icons using fallback if ImageMagick fails
+        try {
+          .\generate-icons.ps1
+        } catch {
+          Write-Host "ImageMagick failed, using fallback"
+          .\generate-icons.ps1
+        }
+      shell: pwsh
+    
+    - name: Build Simple Version
+      working-directory: ./TrResizer
+      run: |
+        .\build-simple.ps1
+        Write-Host "n" | Out-Host
+      shell: pwsh
+    
+    - name: Build Blazor Version (Optional)
+      working-directory: ./TrResizer
+      run: |
+        .\build-extension.ps1 -Browser all -Package
+      shell: pwsh
+      continue-on-error: true
+    
+    - name: Create Release Package
+      working-directory: ./TrResizer
+      run: |
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path release
+        
+        # Package simple version
+        Compress-Archive -Path dist-simple\* -DestinationPath release\TrResizer-Simple.zip -Force
+        
+        # Package Chrome/Edge version if exists
+        if (Test-Path dist\chrome-edge) {
+          Compress-Archive -Path dist\chrome-edge\* -DestinationPath release\TrResizer-ChromeEdge.zip -Force
+        }
+        
+        # Package Firefox version if exists
+        if (Test-Path dist\firefox) {
+          Compress-Archive -Path dist\firefox\* -DestinationPath release\TrResizer-Firefox.zip -Force
+        }
+        
+        # Copy store assets
+        if (Test-Path store-assets) {
+          Compress-Archive -Path store-assets\* -DestinationPath release\TrResizer-StoreAssets.zip -Force
+        }
+      shell: pwsh
+    
+    - name: Upload Extension Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: trresizer-extension
+        path: |
+          TrResizer/release/*.zip
+          TrResizer/store-assets/*.png
+        retention-days: 30
+    
+    - name: Upload Simple Version for Testing
+      uses: actions/upload-artifact@v3
+      with:
+        name: trresizer-simple
+        path: TrResizer/dist-simple/
+        retention-days: 7
+    
+    # Optional: Create GitHub Release
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: trresizer-v${{ github.run_number }}
+        name: TrResizer Release ${{ github.run_number }}
+        draft: false
+        prerelease: false
+        files: |
+          TrResizer/release/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true

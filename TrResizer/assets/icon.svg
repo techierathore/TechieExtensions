@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="url(#grad1)"/>
+  
+  <!-- Window Frame -->
+  <rect x="80" y="120" width="352" height="272" rx="16" fill="none" stroke="white" stroke-width="12" opacity="0.9"/>
+  
+  <!-- Title Bar -->
+  <rect x="80" y="120" width="352" height="48" rx="16" fill="white" opacity="0.2"/>
+  
+  <!-- Resize Arrows -->
+  <!-- Horizontal arrow -->
+  <g transform="translate(256, 256)">
+    <!-- Arrow line -->
+    <line x1="-120" y1="0" x2="120" y2="0" stroke="white" stroke-width="16" stroke-linecap="round"/>
+    <!-- Left arrow head -->
+    <path d="M -120 0 L -90 -20 M -120 0 L -90 20" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Right arrow head -->
+    <path d="M 120 0 L 90 -20 M 120 0 L 90 20" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  
+  <!-- Vertical arrow -->
+  <g transform="translate(256, 256)">
+    <!-- Arrow line -->
+    <line x1="0" y1="-80" x2="0" y2="80" stroke="white" stroke-width="16" stroke-linecap="round"/>
+    <!-- Top arrow head -->
+    <path d="M 0 -80 L -20 -50 M 0 -80 L 20 -50" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Bottom arrow head -->
+    <path d="M 0 80 L -20 50 M 0 80 L 20 50" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  
+  <!-- Corner resize indicator -->
+  <circle cx="432" cy="392" r="8" fill="white" opacity="0.8"/>
+  <circle cx="408" cy="392" r="8" fill="white" opacity="0.8"/>
+  <circle cx="432" cy="368" r="8" fill="white" opacity="0.8"/>
+</svg>

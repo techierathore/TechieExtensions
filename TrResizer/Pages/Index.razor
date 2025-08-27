@@ -1,0 +1,338 @@
+@page "/"
+@inject IJSRuntime JSRuntime
+
+<div class="container">
+    <h3 class="header">TrResizer</h3>
+    
+    <div class="current-size">
+        <div class="size-label">Current Window Size</div>
+        <div class="size-value">@currentWidth x @currentHeight</div>
+    </div>
+
+    <div class="preset-buttons">
+        <h4>Preset Resolutions</h4>
+        
+        <button class="btn" @onclick="() => ResizeWindow(1920, 1080)">
+            <span class="btn-title">Full HD</span>
+            <span class="btn-size">1920 x 1080</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(1280, 720)">
+            <span class="btn-title">HD</span>
+            <span class="btn-size">1280 x 720</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(768, 1024)">
+            <span class="btn-title">Tablet</span>
+            <span class="btn-size">768 x 1024</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(375, 667)">
+            <span class="btn-title">Mobile</span>
+            <span class="btn-size">375 x 667</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(414, 896)">
+            <span class="btn-title">Mobile (Large)</span>
+            <span class="btn-size">414 x 896</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(1366, 768)">
+            <span class="btn-title">Laptop</span>
+            <span class="btn-size">1366 x 768</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(2560, 1440)">
+            <span class="btn-title">2K</span>
+            <span class="btn-size">2560 x 1440</span>
+        </button>
+        
+        <button class="btn" @onclick="() => ResizeWindow(3840, 2160)">
+            <span class="btn-title">4K</span>
+            <span class="btn-size">3840 x 2160</span>
+        </button>
+    </div>
+
+    <div class="custom-size">
+        <h4>Custom Size</h4>
+        <div class="input-group">
+            <div class="input-wrapper">
+                <label>Width</label>
+                <input type="number" @bind="customWidth" placeholder="Width" min="100" max="9999" />
+            </div>
+            <span class="separator">×</span>
+            <div class="input-wrapper">
+                <label>Height</label>
+                <input type="number" @bind="customHeight" placeholder="Height" min="100" max="9999" />
+            </div>
+        </div>
+        <button class="btn btn-custom" @onclick="ApplyCustomSize">Apply Custom Size</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="status-message @(isError ? "error" : "success")">
+            @statusMessage
+        </div>
+    }
+</div>
+
+@code {
+    private int currentWidth = 0;
+    private int currentHeight = 0;
+    private int customWidth = 1024;
+    private int customHeight = 768;
+    private string statusMessage = "";
+    private bool isError = false;
+    private System.Timers.Timer? statusTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetCurrentWindowSize();
+        statusTimer = new System.Timers.Timer(3000);
+        statusTimer.Elapsed += (sender, e) =>
+        {
+            InvokeAsync(() =>
+            {
+                statusMessage = "";
+                StateHasChanged();
+            });
+        };
+    }
+
+    private async Task GetCurrentWindowSize()
+    {
+        try
+        {
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/window-resizer.js");
+            var size = await module.InvokeAsync<WindowSize>("getCurrentWindowSize");
+            currentWidth = size.Width;
+            currentHeight = size.Height;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting window size: {ex.Message}");
+        }
+    }
+
+    private async Task ResizeWindow(int width, int height)
+    {
+        try
+        {
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/window-resizer.js");
+            await module.InvokeVoidAsync("resizeWindow", width, height);
+            
+            await Task.Delay(100);
+            await GetCurrentWindowSize();
+            
+            ShowStatus($"Window resized to {width} x {height}", false);
+        }
+        catch (Exception ex)
+        {
+            ShowStatus($"Error: {ex.Message}", true);
+        }
+    }
+
+    private async Task ApplyCustomSize()
+    {
+        if (customWidth < 100 || customHeight < 100)
+        {
+            ShowStatus("Width and height must be at least 100 pixels", true);
+            return;
+        }
+        
+        if (customWidth > 9999 || customHeight > 9999)
+        {
+            ShowStatus("Width and height cannot exceed 9999 pixels", true);
+            return;
+        }
+        
+        await ResizeWindow(customWidth, customHeight);
+    }
+
+    private void ShowStatus(string message, bool error)
+    {
+        statusMessage = message;
+        isError = error;
+        statusTimer?.Stop();
+        statusTimer?.Start();
+        StateHasChanged();
+    }
+
+    public class WindowSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
+    public void Dispose()
+    {
+        statusTimer?.Dispose();
+    }
+}
+
+<style>
+    .container {
+        width: 380px;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 500px;
+    }
+
+    .header {
+        text-align: center;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .current-size {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .size-label {
+        font-size: 12px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+
+    .size-value {
+        font-size: 24px;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .preset-buttons h4, .custom-size h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+        opacity: 0.95;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-title {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .btn-size {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+
+    .custom-size {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .input-wrapper {
+        flex: 1;
+    }
+
+    .input-wrapper label {
+        display: block;
+        font-size: 11px;
+        margin-bottom: 4px;
+        opacity: 0.9;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+        color: white;
+        font-size: 14px;
+        backdrop-filter: blur(10px);
+    }
+
+    .input-wrapper input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-wrapper input:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .separator {
+        margin-top: 18px;
+        opacity: 0.7;
+    }
+
+    .btn-custom {
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .status-message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 13px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .status-message.success {
+        background: rgba(52, 211, 153, 0.3);
+        border: 1px solid rgba(52, 211, 153, 0.5);
+    }
+
+    .status-message.error {
+        background: rgba(248, 113, 113, 0.3);
+        border: 1px solid rgba(248, 113, 113, 0.5);
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

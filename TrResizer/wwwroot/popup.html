@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Techie ReSizer</title>
+    <link rel="stylesheet" href="css/popup.css" />
+</head>
+<body>
+    <div class="container">
+        <h3 class="header">Techie ReSizer</h3>
+        
+        <div class="current-size">
+            <div class="size-label">Current Window Size</div>
+            <div class="size-value" id="currentSize">Loading...</div>
+        </div>
+
+        <div class="preset-buttons">
+            <h4>Preset Resolutions</h4>
+            
+            <button class="btn" data-width="1920" data-height="1080">
+                <span class="btn-title">Full HD</span>
+                <span class="btn-size">1920 x 1080</span>
+            </button>
+            
+            <button class="btn" data-width="1280" data-height="720">
+                <span class="btn-title">HD</span>
+                <span class="btn-size">1280 x 720</span>
+            </button>
+            
+            <button class="btn" data-width="768" data-height="1024">
+                <span class="btn-title">Tablet</span>
+                <span class="btn-size">768 x 1024</span>
+            </button>
+            
+            <button class="btn" data-width="375" data-height="667">
+                <span class="btn-title">Mobile</span>
+                <span class="btn-size">375 x 667</span>
+            </button>
+            
+            <button class="btn" data-width="414" data-height="896">
+                <span class="btn-title">Mobile (Large)</span>
+                <span class="btn-size">414 x 896</span>
+            </button>
+            
+            <button class="btn" data-width="1366" data-height="768">
+                <span class="btn-title">Laptop</span>
+                <span class="btn-size">1366 x 768</span>
+            </button>
+            
+            <button class="btn" data-width="2560" data-height="1440">
+                <span class="btn-title">2K</span>
+                <span class="btn-size">2560 x 1440</span>
+            </button>
+            
+            <button class="btn" data-width="3840" data-height="2160">
+                <span class="btn-title">4K</span>
+                <span class="btn-size">3840 x 2160</span>
+            </button>
+        </div>
+
+        <div class="custom-size">
+            <h4>Custom Size</h4>
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <label>Width</label>
+                    <input type="number" id="customWidth" placeholder="Width" min="100" max="9999" value="1024" />
+                </div>
+                <span class="separator">×</span>
+                <div class="input-wrapper">
+                    <label>Height</label>
+                    <input type="number" id="customHeight" placeholder="Height" min="100" max="9999" value="768" />
+                </div>
+            </div>
+            <button class="btn btn-custom" id="applyCustom">Apply Custom Size</button>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+        
+        <div class="feedback-section">
+            <button class="btn btn-feedback" id="feedbackBtn">
+                <span class="btn-icon">💬</span>
+                <span class="btn-title">Give Feedback</span>
+            </button>
+        </div>
+    </div>
+    
+    <script src="js/popup.js"></script>
+</body>
+</html>

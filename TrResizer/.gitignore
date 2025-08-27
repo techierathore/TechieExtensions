@@ -1,0 +1,83 @@
+# Build outputs
+bin/
+obj/
+dist/
+dist-simple/
+release/
+publish/
+
+# Blazor/WASM specific
+*.dll
+*.pdb
+*.wasm
+*.blat
+*.dat
+*.json.br
+*.json.gz
+*.js.br
+*.js.gz
+*.css.br
+*.css.gz
+
+# .NET specific
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Visual Studio
+.vscode/
+*.suo
+*.cache
+*.ilk
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+*~
+.DS_Store
+Thumbs.db
+
+# Test Results
+TestResults/
+*.trx
+*.coverage
+
+# User-specific files
+*.rsuser
+*.dbmdl
+*.jfm
+
+# Backup files
+*.bak
+*.backup
+*_backup*
+*_old*
+
+# Local development
+local.settings.json
+appsettings.Development.json
+appsettings.Local.json
+
+# Keep these files
+!wwwroot/
+!wwwroot/**
+!assets/
+!assets/**

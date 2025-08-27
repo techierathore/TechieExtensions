@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Techie ReSizer - Window Resizer",
+  "short_name": "Techie ReSizer",
+  "version": "1.0.0",
+  "description": "Quickly resize your browser window to preset or custom resolutions. Perfect for web developers and designers testing responsive layouts.",
+  "author": "Techie Extensions",
+  "homepage_url": "https://github.com/yourusername/TechieExtensions",
+  "permissions": [
+    "tabs",
+    "windows"
+  ],
+  "host_permissions": [],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Click to resize window",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "trresizer@techieextensions.com",
+      "strict_min_version": "109.0"
+    },
+    "edge": {
+      "browser_action_next_to_addressbar": true
+    }
+  }
+}

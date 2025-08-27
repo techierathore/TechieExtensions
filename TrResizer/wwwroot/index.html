@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Techie ReSizer</title>
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="TrResizer.styles.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 420px;
+            min-height: 600px;
+        }
+        #app {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+        }
+        .loading-progress {
+            display: none;
+        }
+        #blazor-error-ui {
+            display: none;
+            padding: 10px;
+            background: #ff6b6b;
+            color: white;
+            margin: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An error occurred. Please reload the extension.
+        <a href="#" id="reload-btn" style="color: white; text-decoration: underline;">Reload</a>
+    </div>
+    <script src="blazor-framework/blazor.webassembly.js" autostart="false"></script>
+    <script src="js/blazor-init.js"></script>
+</body>
+
+</html>
