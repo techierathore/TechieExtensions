@@ -31,6 +31,18 @@
         return document.body.textContent;
     }
 
+    // Extract filename from URL
+    function getFileNameFromUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            const filename = pathname.split('/').pop() || 'Untitled.md';
+            return decodeURIComponent(filename);
+        } catch (e) {
+            return 'Untitled.md';
+        }
+    }
+
     // Initialize the Markdown viewer
     function initializeMarkdownViewer() {
         if (!isMarkdownFile()) {
@@ -39,14 +51,16 @@
 
         // Store the original content
         const markdownContent = getMarkdownContent();
+        const fileName = getFileNameFromUrl(window.location.href);
         
-        console.log('Markdown file detected, opening in editor with preview mode');
+        console.log('Markdown file detected:', fileName, 'opening in editor with preview mode');
         
         // Send message to background script to handle the navigation
         chrome.runtime.sendMessage({
             action: 'openEditorInCurrentTab',
             content: markdownContent,
             sourceUrl: window.location.href,
+            fileName: fileName,
             startInPreview: true
         }, function(response) {
             if (chrome.runtime.lastError) {
@@ -84,7 +98,8 @@
         chrome.runtime.sendMessage({
             action: 'parseMarkdown',
             content: markdownContent,
-            sourceUrl: window.location.href
+            sourceUrl: window.location.href,
+            fileName: getFileNameFromUrl(window.location.href)
         }, function(response) {
             if (response && response.html) {
                 displayRenderedMarkdown(markdownContent, response.html);
@@ -95,15 +110,16 @@
     }
     
     function displayRenderedMarkdown(rawContent, htmlContent) {
-        // Store original document title if available
-        const originalTitle = document.title || 'Markdown Document';
+        // Get the filename from URL
+        const fileName = getFileNameFromUrl(window.location.href);
+        const displayTitle = fileName + ' - Techie Mark Down Manager';
         
         // Clear the current page and inject our viewer
         document.documentElement.innerHTML = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>${originalTitle} - Techie Mark Down Manager</title>
+    <title>${displayTitle}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -315,7 +331,8 @@
                     chrome.runtime.sendMessage({
                         action: 'openEditor',
                         content: rawContent,
-                        sourceUrl: window.location.href
+                        sourceUrl: window.location.href,
+                        fileName: getFileNameFromUrl(window.location.href)
                     });
                 });
             }
@@ -330,12 +347,14 @@
     }
 
     function displayRawMarkdown(content) {
+        // Get the filename from URL
+        const fileName = getFileNameFromUrl(window.location.href);
         // Fallback display if parsing fails
         document.documentElement.innerHTML = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Markdown Viewer - Techie Mark Down Manager</title>
+    <title>${fileName} - Techie Mark Down Manager</title>
     <meta charset="UTF-8">
     <style>
         body {
@@ -385,7 +404,8 @@
                     chrome.runtime.sendMessage({
                         action: 'openEditor',
                         content: content,
-                        sourceUrl: window.location.href
+                        sourceUrl: window.location.href,
+                        fileName: getFileNameFromUrl(window.location.href)
                     });
                 });
             }

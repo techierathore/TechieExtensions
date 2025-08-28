@@ -8,6 +8,10 @@
         <div class="header-content">
             <img src="icon-48.png" alt="Logo" class="app-logo" />
             <h3 class="app-title">Techie Mark Down Manager</h3>
+            @if (!string.IsNullOrEmpty(_fileName))
+            {
+                <span class="file-name">@_fileName</span>
+            }
             <span class="app-subtitle">Markdown Viewer & Editor</span>
         </div>
     </div>
@@ -60,6 +64,17 @@
         padding: 4px 12px;
         background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
         border-radius: 20px;
+    }
+    
+    .file-name {
+        color: #2d3748;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 4px 16px;
+        background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%);
+        border-radius: 8px;
+        border: 1px solid #cbd5e0;
+        margin-left: 20px;
     }
 </style>
 
@@ -147,6 +162,7 @@ Enjoy writing in Markdown with synchronized scrolling!";
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     private MarkdownEditor? markdownEditor;
     private bool _startInPreview = false;
+    private string _fileName = "";
 
     protected override void OnInitialized()
     {
@@ -172,11 +188,17 @@ Enjoy writing in Markdown with synchronized scrolling!";
                 {
                     // Get content from extension helper
                     var markdownContent = await JSRuntime.InvokeAsync<string>("ExtensionHelper.getMarkdownContent");
+                    var fileName = await JSRuntime.InvokeAsync<string>("ExtensionHelper.getFileName");
                     
                     if (!string.IsNullOrEmpty(markdownContent))
                     {
                         Console.WriteLine($"Loaded markdown content: {markdownContent.Substring(0, Math.Min(100, markdownContent.Length))}...");
                         InitialMarkdown = markdownContent;
+                        _fileName = fileName ?? "Untitled.md";
+                        
+                        // Update browser title safely without eval
+                        await JSRuntime.InvokeVoidAsync("ExtensionHelper.setDocumentTitle", _fileName);
+                        
                         if (markdownEditor != null)
                         {
                             markdownEditor.SetContent(markdownContent);

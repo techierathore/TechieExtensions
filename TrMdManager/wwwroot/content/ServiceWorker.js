@@ -221,12 +221,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Store the markdown content temporarily
         const content = request.content || '';
         const sourceUrl = request.sourceUrl || '';
+        const fileName = request.fileName || 'Untitled.md';
         const startInPreview = request.startInPreview || false;
         
         // Store in storage first
         chrome.storage.local.set({ 
             pendingContent: content,
             sourceUrl: sourceUrl,
+            fileName: fileName,
             startInPreview: startInPreview
         }, function() {
             // Get the current tab and update its URL
@@ -255,12 +257,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Store the markdown content temporarily
         pendingMarkdownContent = request.content || '';
         pendingSourceUrl = request.sourceUrl || '';
+        const fileName = request.fileName || 'Untitled.md';
         const startInPreview = request.startInPreview || false;
         
         // Store in storage first
         chrome.storage.local.set({ 
             pendingContent: pendingMarkdownContent,
             sourceUrl: pendingSourceUrl,
+            fileName: fileName,
             startInPreview: startInPreview
         }, function() {
             // Open the editor in a new tab with parameters
@@ -286,12 +290,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     if (request.action === 'getMarkdownContent') {
         // Return any pending content
-        chrome.storage.local.get(['pendingContent', 'sourceUrl', 'startInPreview'], (result) => {
+        chrome.storage.local.get(['pendingContent', 'sourceUrl', 'fileName', 'startInPreview'], (result) => {
             const content = result.pendingContent || pendingMarkdownContent || '';
             const url = result.sourceUrl || pendingSourceUrl || '';
+            const fileName = result.fileName || 'Untitled.md';
             const startInPreview = result.startInPreview || false;
             
             console.log('Returning markdown content:', content.substring(0, 100) + '...');
+            console.log('File name:', fileName);
             
             // Clear the pending content after sending
             chrome.storage.local.remove(['pendingContent', 'sourceUrl', 'startInPreview']);
@@ -301,6 +307,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({ 
                 content: content,
                 sourceUrl: url,
+                fileName: fileName,
                 startInPreview: startInPreview
             });
         });

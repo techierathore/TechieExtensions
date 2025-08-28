@@ -1,10 +1,10 @@
 # TechieExtensions Suite
 
 <!-- LATEST_RELEASE -->
-📥 **[Download Latest Release](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest)**
+📥 **[Download Latest Release](https://github.com/techierathore/TechieExtensions/releases/latest)**
 <!-- /LATEST_RELEASE -->
 
-[![Build and Release](https://github.com/YOUR_USERNAME/TechieExtensions/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/YOUR_USERNAME/TechieExtensions/actions/workflows/build-and-release.yml)
+[![Build and Release](https://github.com/techierathore/TechieExtensions/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/techierathore/TechieExtensions/actions/workflows/build-and-release.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Extensions](https://img.shields.io/badge/extensions-3-green.svg)](#-extensions-in-this-suite)
 
@@ -25,8 +25,8 @@ A comprehensive Markdown viewer and editor that automatically enhances `.md` fil
 - 📂 Automatic detection of `.md` and `.markdown` files
 
 **Download:** 
-- [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieMarkDownManager-Chrome-Edge.zip)
-- [Firefox Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieMarkDownManager-Firefox.zip)
+- [Chrome/Edge Package](https://github.com/techierathore/TechieExtensions/releases/latest/download/TechieMarkDownManager-Chrome-Edge.zip)
+- [Firefox Package](https://github.com/techierathore/TechieExtensions/releases/latest/download/TechieMarkDownManager-Firefox.zip)
 
 ---
 
@@ -45,8 +45,8 @@ A feature-rich JSON tool for viewing, editing, beautifying, and validating JSON 
 - 📂 Automatic detection of `.json` files
 
 **Download:**
-- [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieJsonManager-Chrome-Edge.zip)
-- [Firefox Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TechieJsonManager-Firefox.zip)
+- [Chrome/Edge Package](https://github.com/techierathore/TechieExtensions/releases/latest/download/TechieJsonManager-Chrome-Edge.zip)
+- [Firefox Package](https://github.com/techierathore/TechieExtensions/releases/latest/download/TechieJsonManager-Firefox.zip)
 
 ---
 
@@ -74,8 +74,8 @@ A powerful browser window resizing tool for testing responsive designs and manag
 - 4K (3840×2160) - Ultra HD
 
 **Download:**
-- [Chrome/Edge Package](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TrResizer-Extension.zip)
-- [Store Assets](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest/download/TrResizer-StoreAssets.zip)
+- [Chrome/Edge Package](https://github.com/techierathore/TechieExtensions/releases/latest/download/TrResizer-Extension.zip)
+- [Store Assets](https://github.com/techierathore/TechieExtensions/releases/latest/download/TrResizer-StoreAssets.zip)
 
 ---
 
@@ -84,7 +84,7 @@ A powerful browser window resizing tool for testing responsive designs and manag
 ### Automatic Download (Recommended):
 
 1. **Download from GitHub Releases**
-   - Go to [Latest Release](https://github.com/YOUR_USERNAME/TechieExtensions/releases/latest)
+   - Go to [Latest Release](https://github.com/techierathore/TechieExtensions/releases/latest)
    - Download the ZIP file for your extension and browser
    - All packages are automatically built and tested
 
